@@ -6,10 +6,11 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.attendify.app.data.model.User
-import com.google.gson.Gson
+import com.attendify.app.data.local.dao.UserDao
+import com.attendify.app.data.local.entity.UserEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,57 +18,84 @@ import javax.inject.Singleton
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
 /**
- * Repository for managing authentication state and session tokens
+ * Repository for managing authentication state with local database
  */
 @Singleton
 class AuthRepository @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val gson: Gson
+    private val userDao: UserDao
 ) {
     private val dataStore = context.dataStore
     
     companion object {
-        private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
-        private val USER_DATA_KEY = stringPreferencesKey("user_data")
+        private val CURRENT_USER_ID_KEY = stringPreferencesKey("current_user_id")
     }
     
     /**
-     * Save authentication token (session cookie or JWT)
+     * Authenticate user with username and password
      */
-    suspend fun saveAuthToken(token: String) {
-        dataStore.edit { preferences ->
-            preferences[AUTH_TOKEN_KEY] = token
+    suspend fun login(username: String, password: String): Result<UserEntity> {
+        return try {
+            val user = userDao.getUserByUsername(username)
+            
+            if (user != null && user.password == password) {
+                // Save current user ID
+                saveCurrentUserId(user.id)
+                Result.success(user)
+            } else {
+                Result.failure(Exception("Invalid username or password"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
     
     /**
-     * Get stored authentication token
+     * Save current user ID
      */
-    fun getAuthToken(): Flow<String?> = dataStore.data.map { preferences ->
-        preferences[AUTH_TOKEN_KEY]
-    }
-    
-    /**
-     * Save current user data
-     */
-    suspend fun saveUser(user: User) {
+    private suspend fun saveCurrentUserId(userId: String) {
         dataStore.edit { preferences ->
-            preferences[USER_DATA_KEY] = gson.toJson(user)
+            preferences[CURRENT_USER_ID_KEY] = userId
         }
     }
     
     /**
-     * Get current user data
+     * Get current user ID
      */
-    fun getUser(): Flow<User?> = dataStore.data.map { preferences ->
-        val userJson = preferences[USER_DATA_KEY]
-        userJson?.let { gson.fromJson(it, User::class.java) }
+    fun getCurrentUserId(): Flow<String?> = dataStore.data.map { preferences ->
+        preferences[CURRENT_USER_ID_KEY]
+    }
+    
+    /**
+     * Get current user
+     */
+    suspend fun getCurrentUser(): UserEntity? {
+        val userId = getCurrentUserId().first()
+        return if (userId != null) {
+            userDao.getUserById(userId).first()
+        } else {
+            null
+        }
+    }
+    
+    /**
+     * Get current user as Flow
+     */
+    fun getCurrentUserFlow(): Flow<UserEntity?> {
+        return dataStore.data.map { preferences ->
+            val userId = preferences[CURRENT_USER_ID_KEY]
+            if (userId != null) {
+                userDao.getUserById(userId).first()
+            } else {
+                null
+            }
+        }
     }
     
     /**
      * Clear all authentication data (logout)
      */
-    suspend fun clearAuth() {
+    suspend fun logout() {
         dataStore.edit { preferences ->
             preferences.clear()
         }
@@ -77,6 +105,6 @@ class AuthRepository @Inject constructor(
      * Check if user is authenticated
      */
     fun isAuthenticated(): Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[AUTH_TOKEN_KEY] != null && preferences[USER_DATA_KEY] != null
+        preferences[CURRENT_USER_ID_KEY] != null
     }
 }
