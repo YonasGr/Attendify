@@ -7,7 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.attendify.app.data.local.dao.UserDao
-import com.attendify.app.data.local.entity.UserEntity
+import com.attendify.app.data.model.User
+import com.attendify.app.data.model.toModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -34,14 +35,14 @@ class AuthRepository @Inject constructor(
     /**
      * Authenticate user with username and password
      */
-    suspend fun login(username: String, password: String): Result<UserEntity> {
+    suspend fun login(username: String, password: String): Result<User> {
         return try {
-            val user = userDao.getUserByUsername(username)
+            val userEntity = userDao.getUserByUsername(username)
             
-            if (user != null && user.password == password) {
+            if (userEntity != null && userEntity.password == password) {
                 // Save current user ID
-                saveCurrentUserId(user.id)
-                Result.success(user)
+                saveCurrentUserId(userEntity.id)
+                Result.success(userEntity.toModel())
             } else {
                 Result.failure(Exception("Invalid username or password"))
             }
@@ -69,10 +70,10 @@ class AuthRepository @Inject constructor(
     /**
      * Get current user
      */
-    suspend fun getCurrentUser(): UserEntity? {
+    suspend fun getCurrentUser(): User? {
         val userId = getCurrentUserId().first()
         return if (userId != null) {
-            userDao.getUserById(userId).first()
+            userDao.getUserById(userId).first()?.toModel()
         } else {
             null
         }
@@ -81,11 +82,11 @@ class AuthRepository @Inject constructor(
     /**
      * Get current user as Flow
      */
-    fun getCurrentUserFlow(): Flow<UserEntity?> {
+    fun getCurrentUserFlow(): Flow<User?> {
         return dataStore.data.map { preferences ->
             val userId = preferences[CURRENT_USER_ID_KEY]
             if (userId != null) {
-                userDao.getUserById(userId).first()
+                userDao.getUserById(userId).first()?.toModel()
             } else {
                 null
             }

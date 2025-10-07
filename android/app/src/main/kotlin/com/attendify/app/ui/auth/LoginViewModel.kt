@@ -3,9 +3,7 @@ package com.attendify.app.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.attendify.app.data.model.User
-import com.attendify.app.data.repository.AttendifyRepository
 import com.attendify.app.data.repository.AuthRepository
-import com.attendify.app.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -19,19 +17,18 @@ data class AuthState(
 )
 
 /**
- * ViewModel for handling authentication logic
+ * ViewModel for handling authentication logic with local database
  */
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
-    private val attendifyRepository: AttendifyRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
     
-    private val _loginState = MutableStateFlow<Resource<User>?>(null)
-    val loginState: StateFlow<Resource<User>?> = _loginState.asStateFlow()
+    private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
+    val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
     
     init {
         checkAuthStatus()
@@ -45,13 +42,12 @@ class LoginViewModel @Inject constructor(
             authRepository.isAuthenticated().collect { isAuth ->
                 if (isAuth) {
                     // User is authenticated, fetch user data
-                    authRepository.getUser().collect { user ->
-                        _authState.value = AuthState(
-                            isAuthenticated = true,
-                            isLoading = false,
-                            user = user
-                        )
-                    }
+                    val user = authRepository.getCurrentUser()
+                    _authState.value = AuthState(
+                        isAuthenticated = true,
+                        isLoading = false,
+                        user = user
+                    )
                 } else {
                     _authState.value = AuthState(
                         isAuthenticated = false,
@@ -63,48 +59,25 @@ class LoginViewModel @Inject constructor(
     }
     
     /**
-     * Simulate login with session token
-     * In a real implementation, this would integrate with the Replit Auth flow
-     * or another OAuth provider
+     * Login with username and password
      */
-    fun login(sessionToken: String) {
+    fun login(username: String, password: String) {
         viewModelScope.launch {
-            _loginState.value = Resource.Loading()
+            _loginState.value = LoginState.Loading
             
-            try {
-                // Save the session token
-                authRepository.saveAuthToken(sessionToken)
-                
-                // Fetch current user
-                attendifyRepository.getCurrentUser().collect { result ->
-                    when (result) {
-                        is Resource.Success -> {
-                            result.data?.let { user ->
-                                authRepository.saveUser(user)
-                                _loginState.value = Resource.Success(user)
-                                _authState.value = AuthState(
-                                    isAuthenticated = true,
-                                    isLoading = false,
-                                    user = user
-                                )
-                            }
-                        }
-                        is Resource.Error -> {
-                            _loginState.value = Resource.Error(result.message ?: "Login failed")
-                            _authState.value = _authState.value.copy(
-                                error = result.message,
-                                isLoading = false
-                            )
-                        }
-                        is Resource.Loading -> {
-                            _loginState.value = Resource.Loading()
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                _loginState.value = Resource.Error(e.message ?: "Login failed")
+            val result = authRepository.login(username, password)
+            
+            result.onSuccess { user ->
+                _loginState.value = LoginState.Success(user)
+                _authState.value = AuthState(
+                    isAuthenticated = true,
+                    isLoading = false,
+                    user = user
+                )
+            }.onFailure { error ->
+                _loginState.value = LoginState.Error(error.message ?: "Login failed")
                 _authState.value = _authState.value.copy(
-                    error = e.message,
+                    error = error.message,
                     isLoading = false
                 )
             }
@@ -116,12 +89,22 @@ class LoginViewModel @Inject constructor(
      */
     fun logout() {
         viewModelScope.launch {
-            authRepository.clearAuth()
+            authRepository.logout()
             _authState.value = AuthState(
                 isAuthenticated = false,
                 isLoading = false
             )
-            _loginState.value = null
+            _loginState.value = LoginState.Idle
         }
     }
+}
+
+/**
+ * Sealed class representing login operation states
+ */
+sealed class LoginState {
+    object Idle : LoginState()
+    object Loading : LoginState()
+    data class Success(val user: User) : LoginState()
+    data class Error(val message: String) : LoginState()
 }
