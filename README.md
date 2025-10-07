@@ -1,58 +1,47 @@
 # Attendify
 
-A comprehensive university attendance tracking system with web and native Android applications.
+A fully offline native Android application for university attendance tracking.
 
 ## Overview
 
-Attendify is a modern attendance management system designed for universities. It supports multiple user roles (Students, Instructors, Admins) and provides QR code-based attendance tracking, real-time analytics, and comprehensive course management.
+Attendify is a modern attendance management system designed for universities, built as a native Android application with complete offline functionality. It supports multiple user roles (Students, Instructors, Admins) and provides QR code-based attendance tracking, analytics, and comprehensive course management - all stored locally on the device.
 
 ## Project Structure
 
 ```
 Attendify/
-├── client/          # React web application
-├── server/          # Express.js/Node.js backend API
-├── shared/          # Shared TypeScript types and schemas
-├── android/         # Native Android application (Kotlin + Jetpack Compose)
-└── ...
+└── android/         # Native Android application (Kotlin + Jetpack Compose)
+    ├── app/
+    │   └── src/main/kotlin/com/attendify/app/
+    │       ├── data/          # Data layer with Room database
+    │       ├── di/            # Dependency injection (Hilt)
+    │       ├── ui/            # UI layer (Jetpack Compose)
+    │       └── utils/         # Utility classes
+    └── ...
 ```
 
-## Applications
+## Android Application
 
-### Web Application
-The web client is built with:
-- React + TypeScript
-- Vite
-- TanStack Query
-- Tailwind CSS
-- Replit Auth
-
-See the `client/` directory for web app setup.
-
-### Android Application
 The native Android app is built with:
-- Kotlin
-- Jetpack Compose (Material 3)
-- Hilt for DI
-- Retrofit for networking
-- ZXing for QR code scanning
+- **Language**: Kotlin
+- **UI Framework**: Jetpack Compose (Material 3)
+- **Architecture**: MVVM with Repository pattern
+- **Dependency Injection**: Hilt
+- **Local Database**: Room (SQLite)
+- **Async Operations**: Kotlin Coroutines + Flow
+- **QR Code**: ZXing for scanning and generation
+- **Authentication**: Local user management
 
-**See [android/README.md](android/README.md) for detailed Android setup instructions.**
-
-### Backend API
-The backend is built with:
-- Express.js
-- Node.js
-- PostgreSQL (via Drizzle ORM)
-- Replit Auth
+**See [android/README.md](android/README.md) for detailed setup instructions.**
 
 ## Features
 
 ### For Students
-- 📱 View enrolled courses (web & mobile)
-- 📷 Scan QR codes to mark attendance (web & mobile)
+- 📱 View enrolled courses
+- 📷 Scan QR codes to mark attendance
 - 📊 Track attendance history
 - 📅 View session schedules
+- 📴 Full offline functionality
 
 ### For Instructors
 - 📚 Create and manage courses
@@ -60,124 +49,124 @@ The backend is built with:
 - 👥 Track student attendance in real-time
 - ➕ Enroll students in courses
 - 📈 View attendance analytics
+- 📊 Session management
 
 ### For Admins
 - 👤 Manage users and assign roles
-- 📖 Full course management
-- 📊 System-wide analytics
+- 📖 Full course and session management
+- 📊 System-wide analytics and reporting
 - 🔧 System administration
+- 👥 Comprehensive user management
 
 ## Quick Start
 
-### Web Application
+### Prerequisites
+- Android Studio Hedgehog (2023.1.1) or later
+- JDK 17 or later
+- Android SDK with API 24 (Android 7.0) minimum
+- Target API 34 (Android 14)
 
-1. Install dependencies:
+### Installation
+
+1. **Clone the repository**
    ```bash
-   npm install
+   git clone https://github.com/YonasGr/Attendify.git
+   cd Attendify/android
    ```
 
-2. Set up environment variables (see server configuration)
+2. **Open in Android Studio**
+   - Open Android Studio
+   - Select "Open an Existing Project"
+   - Navigate to `Attendify/android` directory
+   - Click "OK"
 
-3. Run database migrations:
-   ```bash
-   npm run db:push
-   ```
+3. **Sync Gradle**
+   - Click "Sync Project with Gradle Files" in Android Studio
+   - Wait for dependencies to download
 
-4. Start development server:
-   ```bash
-   npm run dev
-   ```
+4. **Run the app**
+   - Connect an Android device or start an emulator
+   - Click the "Run" button or press Shift + F10
 
-### Android Application
+### First Time Setup
 
-See [android/README.md](android/README.md) for complete setup instructions.
+On first launch, the app will create a local database with default users:
+- **Admin**: username: `admin`, password: `admin123`
+- **Instructor**: username: `instructor`, password: `instructor123`
+- **Student**: username: `student`, password: `student123`
 
-Quick steps:
-1. Open `android/` in Android Studio
-2. Configure API base URL in `app/build.gradle.kts`
-3. Sync Gradle and run
+See [android/README.md](android/README.md) for complete setup instructions and documentation.
 
-## Environment Variables
+## Architecture
 
-Required environment variables for the backend:
-- `DATABASE_URL` - PostgreSQL connection string
-- `SESSION_SECRET` - Secret for session encryption
-- `REPLIT_DOMAINS` - Comma-separated list of domains
-- `REPL_ID` - Replit application ID (for OAuth)
+The application follows modern Android architecture with MVVM pattern:
 
-## API Documentation
+```
+┌─────────────────────────────────────────────────────────┐
+│                     PRESENTATION LAYER                   │
+│                    (Jetpack Compose)                     │
+├─────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Student    │  │  Instructor  │  │    Admin     │  │
+│  │  Dashboard   │  │  Dashboard   │  │  Dashboard   │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│         │                 │                  │          │
+│         └─────────────────┼──────────────────┘          │
+│                           │                             │
+│                  ┌────────▼────────┐                    │
+│                  │   ViewModels    │                    │
+│                  │    (MVVM)       │                    │
+│                  └────────┬────────┘                    │
+├───────────────────────────┼─────────────────────────────┤
+│                  ┌────────▼────────┐                    │
+│                  │  Repositories   │                    │
+│                  └────────┬────────┘                    │
+├───────────────────────────┼─────────────────────────────┤
+│                  ┌────────▼────────┐                    │
+│                  │  Room Database  │                    │
+│                  │    (SQLite)     │                    │
+│                  └─────────────────┘                    │
+└─────────────────────────────────────────────────────────┘
+```
 
-The backend provides a RESTful API for both web and mobile clients:
-
-### Authentication
-- `GET /api/auth/user` - Get current authenticated user
-- `GET /api/login` - Initiate login flow
-- `GET /api/logout` - Logout
-
-### Users
-- `GET /api/users` - List all users (admin)
-- `PATCH /api/users/:id` - Update user role
-
-### Courses
-- `GET /api/courses` - List all courses
-- `POST /api/courses` - Create course
-- `GET /api/courses/instructor/:id` - Get instructor's courses
-
-### Sessions
-- `GET /api/sessions/course/:courseId` - Get course sessions
-- `POST /api/sessions` - Create new session
-- `GET /api/sessions/:id/qrcode` - Get QR code for session
-
-### Attendance
-- `POST /api/attendance/checkin` - Mark attendance with QR code
-- `GET /api/attendance/student/:studentId` - Get student's attendance
-- `GET /api/attendance/session/:sessionId` - Get session attendance
-
-See `server/routes.ts` for complete API reference.
+### Key Components
+- **UI Layer**: Jetpack Compose with Material 3
+- **ViewModel Layer**: Business logic and state management
+- **Repository Layer**: Data access abstraction
+- **Database Layer**: Room (SQLite) for local persistence
 
 ## Technology Stack
 
-### Frontend (Web)
-- React 18
-- TypeScript
-- Vite
-- TanStack Query
-- Tailwind CSS + shadcn/ui
-- html5-qrcode for scanning
-
-### Mobile (Android)
-- Kotlin
-- Jetpack Compose
-- Material 3 Design
-- Hilt (Dependency Injection)
-- Retrofit + OkHttp
-- Kotlin Coroutines + Flow
-- ZXing (QR Code)
-
-### Backend
-- Node.js + Express
-- TypeScript
-- PostgreSQL
-- Drizzle ORM
-- Passport.js (Auth)
-- QRCode generation
+### Android Application
+- **Language**: Kotlin 1.9.20
+- **UI**: Jetpack Compose with Material 3
+- **Architecture**: MVVM with Repository pattern
+- **Dependency Injection**: Hilt 2.48
+- **Database**: Room (SQLite)
+- **Async**: Kotlin Coroutines + Flow
+- **QR Codes**: ZXing for scanning and generation
+- **Local Storage**: DataStore for preferences
+- **Min SDK**: 24 (Android 7.0)
+- **Target SDK**: 34 (Android 14)
 
 ## Development
 
-### Running Tests
+### Building the App
 ```bash
-npm test
+# In Android Studio, or via command line:
+cd android
+./gradlew assembleDebug
 ```
 
-### Type Checking
+### Running Tests
 ```bash
-npm run check
+./gradlew test
+./gradlew connectedAndroidTest
 ```
 
 ### Building for Production
 ```bash
-npm run build
-npm start
+./gradlew assembleRelease
 ```
 
 ## Contributing
@@ -185,8 +174,9 @@ npm start
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly (web and/or mobile)
-5. Submit a pull request
+4. Test thoroughly on Android devices/emulators
+5. Follow Kotlin coding conventions
+6. Submit a pull request
 
 ## License
 
@@ -202,47 +192,45 @@ For issues and questions:
 ## Roadmap
 
 ### Phase 1 (Complete)
-- ✅ Web application with all role dashboards
-- ✅ Backend API
-- ✅ Basic authentication
-- ✅ QR code generation and scanning (web)
 - ✅ Android app scaffold and architecture
+- ✅ Room database integration
+- ✅ Local authentication
+- ✅ Role-based navigation
+- ✅ QR code generation and scanning
+- ✅ Complete offline functionality
 
-### Phase 2 (In Progress)
-- 🔄 Android app - Core features implementation
-- 🔄 Enhanced authentication
-- 🔄 Real-time updates
+### Phase 2 (Current)
+- ✅ Course management
+- ✅ Session management
+- ✅ Attendance tracking
+- ✅ User management
+- ✅ Analytics and reporting
 
-### Phase 3 (Planned)
-- 📱 iOS application
-- 🔔 Push notifications
-- 📊 Advanced analytics
-- 🌐 Multi-language support
-- 📴 Offline support
+### Phase 3 (Future)
+- 🔄 Data export/import functionality
+- 🔄 Biometric authentication
+- 🔄 Advanced analytics dashboards
+- 🔄 Multi-language support
+- 🔄 Dark mode enhancements
+- 🔄 Backup and restore
 
-## Architecture
+## Data Management
 
-The system follows a client-server architecture:
+All data is stored locally on the device using Room (SQLite):
 
-```
-┌─────────────┐     ┌─────────────┐
-│  Web Client │────▶│             │
-└─────────────┘     │             │
-                    │   Backend   │
-┌─────────────┐     │   API       │
-│Android App  │────▶│  (Express)  │
-└─────────────┘     │             │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  PostgreSQL │
-                    └─────────────┘
-```
+### Database Entities
+- **Users**: Student, Instructor, Admin accounts
+- **Courses**: Course information and instructors
+- **Sessions**: Class sessions with dates and times
+- **Enrollments**: Student-course relationships
+- **Attendance Records**: Check-in records with timestamps
 
-- **Frontend clients** (web/mobile) communicate with the backend via REST API
-- **Backend** handles business logic, authentication, and data persistence
-- **Database** stores all application data
-- **Authentication** is handled via Replit Auth (web) and session tokens (mobile)
+### Data Persistence
+- Automatic database creation on first launch
+- Seed data for default users
+- Transaction-based operations
+- Data integrity with foreign keys
+- Cascading deletes where appropriate
 
 ## Screenshots
 
