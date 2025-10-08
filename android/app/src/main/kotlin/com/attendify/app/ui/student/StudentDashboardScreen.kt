@@ -1,5 +1,6 @@
 package com.attendify.app.ui.student
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -23,7 +24,9 @@ fun StudentDashboardScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     studentViewModel: StudentViewModel = hiltViewModel(),
     onLogout: () -> Unit,
-    onNavigateToQRScanner: () -> Unit = {}
+    onNavigateToQRScanner: () -> Unit = {},
+    onNavigateToCourses: () -> Unit = {},
+    onNavigateToAttendance: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -87,7 +90,9 @@ fun StudentDashboardScreen(
             
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToCourses),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -105,7 +110,7 @@ fun StudentDashboardScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Enrolled Courses",
                                     style = MaterialTheme.typography.titleMedium,
@@ -117,6 +122,11 @@ fun StudentDashboardScreen(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View courses",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }
@@ -124,7 +134,9 @@ fun StudentDashboardScreen(
             
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToAttendance),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -142,7 +154,7 @@ fun StudentDashboardScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Attendance Records",
                                     style = MaterialTheme.typography.titleMedium,
@@ -154,6 +166,11 @@ fun StudentDashboardScreen(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View attendance",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }

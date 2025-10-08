@@ -15,6 +15,8 @@ import com.attendify.app.ui.auth.LoginScreen
 import com.attendify.app.ui.auth.LoginViewModel
 import com.attendify.app.ui.student.StudentDashboardScreen
 import com.attendify.app.ui.student.QRCodeScannerScreen
+import com.attendify.app.ui.student.StudentCoursesScreen
+import com.attendify.app.ui.student.AttendanceHistoryScreen
 import com.attendify.app.ui.instructor.InstructorDashboardScreen
 import com.attendify.app.ui.instructor.QRCodeDisplayScreen
 import com.attendify.app.ui.admin.AdminDashboardScreen
@@ -88,12 +90,37 @@ fun AttendifyApp() {
                 },
                 onNavigateToQRScanner = {
                     navController.navigate(Screen.QRScanner.route)
+                },
+                onNavigateToCourses = {
+                    navController.navigate(Screen.StudentCourses.route)
+                },
+                onNavigateToAttendance = {
+                    navController.navigate(Screen.AttendanceHistory.route)
                 }
             )
         }
         
         composable(Screen.QRScanner.route) {
             QRCodeScannerScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                }
+            )
+        }
+        
+        composable(Screen.StudentCourses.route) {
+            StudentCoursesScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onCourseClick = { courseId ->
+                    navController.navigate(Screen.CourseDetails.createRoute(courseId))
+                }
+            )
+        }
+        
+        composable(Screen.AttendanceHistory.route) {
+            AttendanceHistoryScreen(
                 onNavigateBack = {
                     navController.navigateUp()
                 }

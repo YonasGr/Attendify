@@ -9,6 +9,8 @@ sealed class Screen(val route: String) {
     object InstructorDashboard : Screen("instructor_dashboard")
     object AdminDashboard : Screen("admin_dashboard")
     object QRScanner : Screen("qr_scanner")
+    object StudentCourses : Screen("student_courses")
+    object AttendanceHistory : Screen("attendance_history")
     object QRCodeDisplay : Screen("qr_code_display/{sessionId}/{sessionTitle}/{qrCode}") {
         fun createRoute(sessionId: String, sessionTitle: String, qrCode: String) = 
             "qr_code_display/$sessionId/$sessionTitle/$qrCode"
