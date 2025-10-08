@@ -261,6 +261,40 @@ Run tests:
 ./gradlew connectedAndroidTest
 ```
 
+## Customization
+
+### Profile Logo
+
+The app displays a profile logo in the top app bar of all dashboard screens. To customize it:
+
+1. **Prepare Your Logo**:
+   - Create a vector drawable (XML) for best scalability - recommended
+   - Or use PNG format (48x48dp recommended, but higher resolution is better)
+   - Ensure good contrast with the primary color background
+
+2. **Replace the Default Logo**:
+   ```
+   android/app/src/main/res/drawable/ic_profile_logo.xml
+   ```
+   - Option A: Replace the XML file with your own vector drawable
+   - Option B: Delete the XML and add `ic_profile_logo.png` (or other image format)
+
+3. **Using Android Studio** (Easiest Method):
+   - Right-click on `app/src/main/res/drawable`
+   - Select **"New → Image Asset"** for PNG/JPG images
+   - Or select **"New → Vector Asset"** for SVG files
+   - Set the name as `ic_profile_logo`
+   - Configure colors and sizing as needed
+   - Click "Finish" to generate the asset
+
+4. **Manual XML Vector Drawable** (For Custom Design):
+   - Edit `ic_profile_logo.xml` directly
+   - Modify the `pathData` to create custom shapes
+   - Change `android:fillColor` for custom colors
+   - Adjust `android:viewportWidth` and `android:viewportHeight` as needed
+
+The logo appears as a circular icon on the left side of the top app bar across all user roles (Student, Instructor, Admin).
+
 ## Troubleshooting
 
 ### Common Issues
