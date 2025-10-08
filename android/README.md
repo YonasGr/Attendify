@@ -1,6 +1,6 @@
 # Attendify Android App
 
-A native Android application for the Attendify university attendance tracking system. Built with Kotlin, Jetpack Compose, and modern Android architecture components.
+A fully offline native Android application for university attendance tracking. Built with Kotlin, Jetpack Compose, Room database, and modern Android architecture components.
 
 ## Features
 
@@ -9,28 +9,32 @@ A native Android application for the Attendify university attendance tracking sy
 - 📷 Scan QR codes to mark attendance
 - 📊 View attendance history for all courses
 - 📅 See upcoming sessions
+- 📴 **Full offline functionality**
 
 ### Instructor Features
 - 📚 Manage courses and sessions
 - 🎫 Generate QR codes for attendance sessions
 - 👥 Track student attendance in real-time
 - ➕ Enroll students in courses
+- 📊 View course statistics
 
 ### Admin Features
 - 👤 Manage users and assign roles
 - 📖 Course management
 - 📈 View analytics and attendance statistics
 - 🔧 System administration
+- 📊 Comprehensive reporting
 
 ## Tech Stack
 
-- **Language**: Kotlin
+- **Language**: Kotlin 1.9.20
 - **UI Framework**: Jetpack Compose (Material 3)
 - **Architecture**: MVVM with Repository pattern
 - **Dependency Injection**: Hilt
-- **Networking**: Retrofit + OkHttp
+- **Local Database**: Room (SQLite)
 - **Async Operations**: Kotlin Coroutines + Flow
 - **QR Code Scanning**: ZXing
+- **QR Code Generation**: ZXing
 - **Local Storage**: DataStore (for authentication)
 
 ## Project Structure
@@ -38,8 +42,12 @@ A native Android application for the Attendify university attendance tracking sy
 ```
 app/src/main/kotlin/com/attendify/app/
 ├── data/
-│   ├── api/              # Retrofit API service
-│   ├── model/            # Data models
+│   ├── local/            # Room database
+│   │   ├── entity/       # Room entities
+│   │   ├── dao/          # Data Access Objects
+│   │   ├── AttendifyDatabase.kt
+│   │   └── DatabaseSeeder.kt
+│   ├── model/            # UI models
 │   └── repository/       # Repository layer
 ├── di/                   # Dependency injection modules
 ├── ui/
@@ -77,47 +85,47 @@ app/src/main/kotlin/com/attendify/app/
    - Navigate to `Attendify/android` directory
    - Click "OK"
 
-3. **Configure API Base URL**
-   
-   Update the API base URL in `app/build.gradle.kts`:
-   ```kotlin
-   buildConfigField("String", "API_BASE_URL", "\"https://your-backend-url.com/api/\"")
-   ```
-   
-   Replace `your-backend-url.com` with your actual backend URL.
-
-4. **Sync Gradle**
+3. **Sync Gradle**
    - Click "Sync Project with Gradle Files" in Android Studio
    - Wait for dependencies to download
 
-5. **Run the app**
+4. **Run the app**
    - Connect an Android device or start an emulator
    - Click the "Run" button or press Shift + F10
 
-## Configuration
+## First Time Setup
 
-### Backend Integration
+On first launch, the app automatically creates a local database and seeds it with default users:
 
-The app connects to the Attendify Express.js backend. Ensure your backend is running and accessible from your device/emulator.
+### Default Accounts
 
-**For development with local backend:**
-- If using an emulator, use `10.0.2.2` instead of `localhost`
-- Example: `http://10.0.2.2:5000/api/`
+- **Admin**
+  - Username: `admin`
+  - Password: `admin123`
+  - Full system access
 
-**For Replit deployments:**
-- Use the Replit URL: `https://your-repl.replit.app/api/`
+- **Instructor**
+  - Username: `instructor`
+  - Password: `instructor123`
+  - Can create courses, sessions, and manage attendance
 
-### Authentication
+- **Student**
+  - Username: `student`
+  - Password: `student123`
+  - Can view courses and mark attendance
 
-The current implementation uses session token authentication:
+### Sample Data
 
-1. Log in to the web app
-2. Open browser developer tools (F12)
-3. Navigate to Application → Cookies
-4. Copy the session cookie value
-5. Paste it in the Android app login screen
+The app also creates:
+- 2 sample courses (CS101, CS201)
+- 3 sample sessions
+- Sample enrollments for the student account
 
-**Future Enhancement**: Implement proper OAuth flow with Replit Auth or another provider.
+## Authentication
+
+The app uses local username/password authentication stored in Room database.
+
+**⚠️ Security Note**: For production use, implement proper password hashing (e.g., BCrypt, Argon2) instead of plain text storage.
 
 ## Building for Production
 
@@ -142,7 +150,11 @@ The current implementation uses session token authentication:
        buildTypes {
            release {
                signingConfig = signingConfigs.getByName("release")
-               // ... other settings
+               isMinifyEnabled = true
+               proguardFiles(
+                   getDefaultProguardFile("proguard-android-optimize.txt"),
+                   "proguard-rules.pro"
+               )
            }
        }
    }
@@ -153,43 +165,93 @@ The current implementation uses session token authentication:
    ./gradlew assembleRelease
    ```
    
-   Output: `app/build/outputs/apk/release/app-release.apk`
+   The APK will be generated in `app/build/outputs/apk/release/`
 
-4. **Build Android App Bundle** (recommended for Play Store)
+4. **Build release App Bundle (for Play Store)**
    ```bash
    ./gradlew bundleRelease
    ```
    
-   Output: `app/build/outputs/bundle/release/app-release.aab`
+   The AAB will be generated in `app/build/outputs/bundle/release/`
+
+## Data Management
+
+### Local Database
+
+All data is stored locally using Room (SQLite):
+
+- **Users**: Local user accounts with roles
+- **Courses**: Course information
+- **Sessions**: Class sessions with QR codes
+- **Enrollments**: Student-course relationships
+- **Attendance Records**: Check-in records
+
+### Database Location
+
+The database file is located at:
+```
+/data/data/com.attendify.app/databases/attendify_database
+```
+
+### Backup and Export
+
+To backup the database:
+```bash
+adb pull /data/data/com.attendify.app/databases/attendify_database backup.db
+```
+
+To restore:
+```bash
+adb push backup.db /data/data/com.attendify.app/databases/attendify_database
+```
+
+### Clearing Data
+
+To reset the app and database:
+- Settings → Apps → Attendify → Storage → Clear Data
+- Or reinstall the app
 
 ## Development Guidelines
 
 ### Adding New Features
 
-1. **Create data models** in `data/model/`
-2. **Add API endpoints** to `AttendifyApiService`
-3. **Update repository** methods in `AttendifyRepository`
-4. **Create ViewModel** for the feature
-5. **Build UI** with Composables
-6. **Add navigation** routes if needed
+1. **Create Entity** (if new data type)
+   - Add to `data/local/entity/`
+   - Define table structure with `@Entity`
+   
+2. **Create DAO**
+   - Add to `data/local/dao/`
+   - Define database operations
+   
+3. **Update Database**
+   - Add entity to `AttendifyDatabase`
+   - Increment database version if needed
+   
+4. **Create Repository**
+   - Add to `data/repository/`
+   - Implement business logic
+   
+5. **Create ViewModel**
+   - Handle UI state
+   - Call repository methods
+   
+6. **Create UI**
+   - Jetpack Compose screens
+   - Observe ViewModel state
 
 ### Code Style
 
 - Follow Kotlin coding conventions
-- Use Jetpack Compose best practices
-- Implement proper error handling
-- Write meaningful comments for complex logic
-- Use `Resource<T>` for API responses
+- Use meaningful variable names
+- Add KDoc comments for public APIs
+- Keep functions small and focused
+- Use data classes for models
 
 ### Testing
 
-Run unit tests:
+Run tests:
 ```bash
 ./gradlew test
-```
-
-Run instrumented tests:
-```bash
 ./gradlew connectedAndroidTest
 ```
 
@@ -197,11 +259,8 @@ Run instrumented tests:
 
 ### Common Issues
 
-**Issue**: "Unable to connect to API"
-- **Solution**: Check API_BASE_URL configuration and network connectivity
-
-**Issue**: "Authentication failed"
-- **Solution**: Ensure session token is valid and not expired
+**Issue**: "Database locked" or "Database corrupted"
+- **Solution**: Clear app data or reinstall the app
 
 **Issue**: "QR Scanner not working"
 - **Solution**: Grant camera permissions in app settings
@@ -209,42 +268,8 @@ Run instrumented tests:
 **Issue**: Build fails with "SDK not found"
 - **Solution**: Install required SDK versions via Android Studio SDK Manager
 
-## API Documentation
-
-The Android app integrates with these backend endpoints:
-
-### Authentication
-- `GET /api/auth/user` - Get current user
-
-### Users
-- `GET /api/users` - Get all users (admin)
-- `GET /api/users/students` - Get all students
-- `GET /api/users/instructors` - Get all instructors
-- `PATCH /api/users/{id}` - Update user
-
-### Courses
-- `GET /api/courses` - Get all courses
-- `GET /api/courses/{id}` - Get course by ID
-- `POST /api/courses` - Create course
-- `GET /api/courses/instructor/{instructorId}` - Get instructor's courses
-
-### Enrollments
-- `GET /api/enrollments/course/{courseId}` - Get course enrollments
-- `GET /api/enrollments/student/{studentId}` - Get student enrollments
-- `POST /api/enrollments` - Create enrollment
-- `DELETE /api/enrollments/{id}` - Delete enrollment
-
-### Sessions
-- `GET /api/sessions/course/{courseId}` - Get course sessions
-- `POST /api/sessions` - Create session
-- `GET /api/sessions/{id}/qrcode` - Get session QR code
-- `PATCH /api/sessions/{id}` - Update session
-
-### Attendance
-- `POST /api/attendance/checkin` - Check in with QR code
-- `GET /api/attendance/session/{sessionId}` - Get session attendance
-- `GET /api/attendance/student/{studentId}` - Get student attendance
-- `GET /api/attendance/course/{courseId}/student/{studentId}` - Get attendance for student in course
+**Issue**: "Failed to sync Gradle"
+- **Solution**: Check internet connection and Gradle version compatibility
 
 ## Contributing
 
@@ -267,34 +292,34 @@ For issues and questions:
 
 ## Roadmap
 
-### Phase 1 (Current - MVP)
-- [x] Basic authentication with session tokens
+### Phase 1 (Complete)
+- [x] Local database with Room
+- [x] Local authentication with username/password
 - [x] Role-based navigation (Student, Instructor, Admin)
 - [x] Dashboard layouts for all roles
-- [x] API integration foundation
-- [ ] QR code scanning implementation
-- [ ] Course list display
-- [ ] Attendance history view
+- [x] Database seeding with default users
+- [x] Complete offline functionality
 
-### Phase 2
-- [ ] Full OAuth integration
-- [ ] Course details screens
+### Phase 2 (Current)
+- [ ] QR code scanning implementation
+- [ ] QR code generation for sessions
+- [ ] Course management UI
 - [ ] Session management UI
-- [ ] Real-time attendance updates
-- [ ] QR code generation for instructors
+- [ ] Enrollment management
+- [ ] Attendance marking via QR scan
+
+### Phase 3 (Planned)
+- [ ] Analytics dashboards
+- [ ] Attendance reports and export
+- [ ] User management UI for admins
+- [ ] Course statistics and insights
 - [ ] Enhanced error handling
 
-### Phase 3
-- [ ] Offline support with local database
-- [ ] Push notifications for sessions
+### Phase 4 (Future)
+- [ ] Data export/import functionality
 - [ ] Biometric authentication
-- [ ] Advanced analytics dashboard
-- [ ] Export attendance reports
+- [ ] Push notifications for sessions
 - [ ] Dark mode toggle
-
-### Phase 4
 - [ ] Multi-language support
 - [ ] Accessibility improvements
-- [ ] Performance optimizations
-- [ ] Comprehensive testing coverage
 - [ ] Play Store release

@@ -10,12 +10,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.User
-import com.attendify.app.utils.Resource
 
 /**
- * Login screen composable
- * For MVP, uses a simple session token input
- * In production, integrate with Replit Auth or OAuth provider
+ * Login screen with local authentication
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,15 +20,14 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: (User) -> Unit
 ) {
-    var sessionToken by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     val loginState by viewModel.loginState.collectAsState()
     
     // Navigate on successful login
     LaunchedEffect(loginState) {
-        if (loginState is Resource.Success) {
-            loginState?.data?.let { user ->
-                onLoginSuccess(user)
-            }
+        if (loginState is LoginState.Success) {
+            onLoginSuccess((loginState as LoginState.Success).user)
         }
     }
     
@@ -71,40 +67,45 @@ fun LoginScreen(
             
             Spacer(modifier = Modifier.height(48.dp))
             
-            // Session Token Input (MVP approach)
+            // Username Input
             OutlinedTextField(
-                value = sessionToken,
-                onValueChange = { sessionToken = it },
-                label = { Text("Session Token") },
-                placeholder = { Text("Enter your session token") },
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
+                placeholder = { Text("Enter your username") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                enabled = loginState !is Resource.Loading
+                enabled = loginState !is LoginState.Loading
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            Text(
-                text = "Note: Get your session token from the web app after logging in",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            // Password Input
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                placeholder = { Text("Enter your password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                enabled = loginState !is LoginState.Loading
             )
             
             Spacer(modifier = Modifier.height(32.dp))
             
             Button(
                 onClick = {
-                    if (sessionToken.isNotBlank()) {
-                        viewModel.login(sessionToken)
+                    if (username.isNotBlank() && password.isNotBlank()) {
+                        viewModel.login(username, password)
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = sessionToken.isNotBlank() && loginState !is Resource.Loading
+                enabled = username.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading
             ) {
-                if (loginState is Resource.Loading) {
+                if (loginState is LoginState.Loading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary
@@ -115,10 +116,10 @@ fun LoginScreen(
             }
             
             // Error message
-            if (loginState is Resource.Error) {
+            if (loginState is LoginState.Error) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = loginState?.message ?: "Login failed",
+                    text = (loginState as LoginState.Error).message,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -136,17 +137,15 @@ fun LoginScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "How to get your session token:",
+                        text = "Default Accounts:",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "1. Login to Attendify web app\n" +
-                                "2. Open browser dev tools (F12)\n" +
-                                "3. Go to Application/Storage → Cookies\n" +
-                                "4. Copy the session cookie value\n" +
-                                "5. Paste it here",
+                        text = "Admin: username: admin, password: admin123\n" +
+                                "Instructor: username: instructor, password: instructor123\n" +
+                                "Student: username: student, password: student123",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
