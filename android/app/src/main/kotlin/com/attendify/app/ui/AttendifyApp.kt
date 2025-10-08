@@ -23,6 +23,8 @@ import com.attendify.app.ui.instructor.CreateCourseScreen
 import com.attendify.app.ui.instructor.SessionsScreen
 import com.attendify.app.ui.instructor.QRCodeDisplayScreen
 import com.attendify.app.ui.admin.AdminDashboardScreen
+import com.attendify.app.ui.admin.UserManagementScreen
+import com.attendify.app.ui.admin.CreateUserScreen
 
 /**
  * Main composable that sets up navigation and authentication flow
@@ -194,6 +196,34 @@ fun AttendifyApp() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToUsers = {
+                    navController.navigate(Screen.UserManagement.route)
+                },
+                onNavigateToCourses = {
+                    navController.navigate(Screen.InstructorCourses.route)
+                },
+                onNavigateToEnrollments = {
+                    // TODO: Enrollment management screen
+                }
+            )
+        }
+        
+        composable(Screen.UserManagement.route) {
+            UserManagementScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onCreateUser = {
+                    navController.navigate(Screen.CreateUser.route)
+                }
+            )
+        }
+        
+        composable(Screen.CreateUser.route) {
+            CreateUserScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }

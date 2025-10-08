@@ -1,5 +1,6 @@
 package com.attendify.app.ui.admin
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,10 @@ import com.attendify.app.ui.auth.LoginViewModel
 fun AdminDashboardScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     adminViewModel: AdminViewModel = hiltViewModel(),
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToUsers: () -> Unit = {},
+    onNavigateToCourses: () -> Unit = {},
+    onNavigateToEnrollments: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -131,7 +135,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.ManageAccounts,
                     title = "User Management",
-                    description = "Manage users and assign roles"
+                    description = "Manage users and assign roles",
+                    onClick = onNavigateToUsers
                 )
             }
             
@@ -139,7 +144,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.LibraryBooks,
                     title = "Course Management",
-                    description = "Create and manage courses"
+                    description = "Create and manage courses",
+                    onClick = onNavigateToCourses
                 )
             }
             
@@ -147,7 +153,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.PersonAdd,
                     title = "Enrollment Management",
-                    description = "Enroll students in courses"
+                    description = "Enroll students in courses",
+                    onClick = onNavigateToEnrollments
                 )
             }
             
@@ -155,7 +162,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.Analytics,
                     title = "Analytics",
-                    description = "View attendance statistics and reports"
+                    description = "View attendance statistics and reports",
+                    onClick = { }
                 )
             }
         }
@@ -205,10 +213,13 @@ private fun StatCard(
 private fun FeatureCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    description: String
+    description: String,
+    onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
