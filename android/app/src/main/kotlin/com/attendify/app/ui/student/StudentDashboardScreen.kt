@@ -22,7 +22,8 @@ import com.attendify.app.ui.auth.LoginViewModel
 fun StudentDashboardScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     studentViewModel: StudentViewModel = hiltViewModel(),
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToQRScanner: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -62,7 +63,7 @@ fun StudentDashboardScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* TODO: Navigate to QR Scanner */ },
+                onClick = onNavigateToQRScanner,
                 icon = { Icon(Icons.Default.QrCodeScanner, "Scan QR") },
                 text = { Text("Scan QR Code") },
                 containerColor = MaterialTheme.colorScheme.primary

@@ -6,13 +6,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.attendify.app.ui.auth.LoginScreen
 import com.attendify.app.ui.auth.LoginViewModel
 import com.attendify.app.ui.student.StudentDashboardScreen
+import com.attendify.app.ui.student.QRCodeScannerScreen
 import com.attendify.app.ui.instructor.InstructorDashboardScreen
+import com.attendify.app.ui.instructor.QRCodeDisplayScreen
 import com.attendify.app.ui.admin.AdminDashboardScreen
 
 /**
@@ -81,6 +85,17 @@ fun AttendifyApp() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToQRScanner = {
+                    navController.navigate(Screen.QRScanner.route)
+                }
+            )
+        }
+        
+        composable(Screen.QRScanner.route) {
+            QRCodeScannerScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }
@@ -101,6 +116,28 @@ fun AttendifyApp() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                }
+            )
+        }
+        
+        composable(
+            route = Screen.QRCodeDisplay.route,
+            arguments = listOf(
+                navArgument("sessionId") { type = NavType.StringType },
+                navArgument("sessionTitle") { type = NavType.StringType },
+                navArgument("qrCode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val sessionTitle = backStackEntry.arguments?.getString("sessionTitle") ?: ""
+            val qrCode = backStackEntry.arguments?.getString("qrCode") ?: ""
+            
+            QRCodeDisplayScreen(
+                sessionId = sessionId,
+                sessionTitle = sessionTitle,
+                qrCode = qrCode,
+                onNavigateBack = {
+                    navController.navigateUp()
                 }
             )
         }
