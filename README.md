@@ -63,8 +63,10 @@ The native Android app is built with:
 ### Prerequisites
 - Android Studio Hedgehog (2023.1.1) or later
 - JDK 17 or later
+- Gradle 8.5 (included via wrapper)
 - Android SDK with API 24 (Android 7.0) minimum
 - Target API 34 (Android 14)
+- Network access to Google Maven repository for dependency downloads
 
 ### Installation
 
@@ -138,10 +140,12 @@ The application follows modern Android architecture with MVVM pattern:
 ## Technology Stack
 
 ### Android Application
-- **Language**: Kotlin 1.9.20
+- **Language**: Kotlin 1.9.22
+- **Build System**: Gradle 8.5
 - **UI**: Jetpack Compose with Material 3
 - **Architecture**: MVVM with Repository pattern
-- **Dependency Injection**: Hilt 2.48
+- **Dependency Injection**: Hilt 2.50
+- **Code Generation**: KSP (Kotlin Symbol Processing)
 - **Database**: Room (SQLite)
 - **Async**: Kotlin Coroutines + Flow
 - **QR Codes**: ZXing for scanning and generation

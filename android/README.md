@@ -27,10 +27,12 @@ A fully offline native Android application for university attendance tracking. B
 
 ## Tech Stack
 
-- **Language**: Kotlin 1.9.20
+- **Language**: Kotlin 1.9.22
+- **Build System**: Gradle 8.5
 - **UI Framework**: Jetpack Compose (Material 3)
 - **Architecture**: MVVM with Repository pattern
-- **Dependency Injection**: Hilt
+- **Dependency Injection**: Hilt 2.50
+- **Code Generation**: KSP (Kotlin Symbol Processing)
 - **Local Database**: Room (SQLite)
 - **Async Operations**: Kotlin Coroutines + Flow
 - **QR Code Scanning**: ZXing
@@ -66,10 +68,14 @@ app/src/main/kotlin/com/attendify/app/
 
 ### Prerequisites
 
-- Android Studio Hedgehog (2023.1.1) or later
+- Android Studio Hedgehog (2023.1.1) or later (Iguana 2023.2.1+ recommended)
 - JDK 17 or later
+- Gradle 8.5 (included via wrapper)
 - Android SDK with API 24 (Android 7.0) minimum
 - Target API 34 (Android 14)
+- Network access to Google Maven repository (https://dl.google.com) for dependency downloads
+
+> **Note**: If you're building in a restricted network environment, see [BUILD_REQUIREMENTS.md](BUILD_REQUIREMENTS.md) for mirror configuration options.
 
 ### Installation
 
@@ -268,8 +274,21 @@ Run tests:
 **Issue**: Build fails with "SDK not found"
 - **Solution**: Install required SDK versions via Android Studio SDK Manager
 
-**Issue**: "Failed to sync Gradle"
-- **Solution**: Check internet connection and Gradle version compatibility
+**Issue**: "Failed to sync Gradle" or "Could not resolve dependencies"
+- **Solution**: 
+  - Check internet connection and network access to Google Maven repository
+  - Verify JDK 17+ is configured
+  - See [BUILD_REQUIREMENTS.md](BUILD_REQUIREMENTS.md) for detailed troubleshooting
+  - If behind a firewall, configure repository mirrors
+
+**Issue**: KSP compilation errors
+- **Solution**: Clean and rebuild project (`./gradlew clean build`)
+
+## Build Configuration
+
+For detailed information about build configuration, version requirements, and troubleshooting:
+- See [BUILD_REQUIREMENTS.md](BUILD_REQUIREMENTS.md) - Comprehensive build guide
+- Check current versions: Gradle 8.5, Kotlin 1.9.22, AGP 8.2.2, Hilt 2.50
 
 ## Contributing
 
