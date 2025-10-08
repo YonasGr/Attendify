@@ -59,7 +59,7 @@ class StudentViewModel @Inject constructor(
             _errorMessage.value = null
             
             try {
-                val user = authRepository.getUser().first()
+                val user = authRepository.getCurrentUser()
                 if (user == null) {
                     _errorMessage.value = "User not found"
                     _isLoading.value = false
@@ -106,7 +106,7 @@ class StudentViewModel @Inject constructor(
             _checkInMessage.value = null
             
             try {
-                val user = authRepository.getUser().first()
+                val user = authRepository.getCurrentUser()
                 if (user == null) {
                     _checkInMessage.value = "User not found"
                     _isLoading.value = false
