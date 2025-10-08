@@ -236,6 +236,30 @@ All data is stored locally on the device using Room (SQLite):
 - Data integrity with foreign keys
 - Cascading deletes where appropriate
 
+## Customization
+
+### Profile Logo
+
+The app includes a default profile logo displayed in the top app bar. To customize it with your own logo:
+
+1. **Prepare your image**:
+   - Create an image file in PNG format (recommended size: 48x48dp or larger)
+   - Or create a vector drawable XML file for scalability
+
+2. **Replace the default logo**:
+   - Navigate to `android/app/src/main/res/drawable/`
+   - Replace `ic_profile_logo.xml` with your custom image file
+   - If using PNG: name it `ic_profile_logo.png`
+   - If using XML: keep the name as `ic_profile_logo.xml`
+
+3. **Using Android Studio**:
+   - Right-click on `res/drawable` folder
+   - Select "New → Image Asset" or "New → Vector Asset"
+   - Configure your asset and name it `ic_profile_logo`
+   - The new asset will automatically replace the default
+
+The profile logo appears on all dashboard screens (Student, Instructor, and Admin) in the top app bar next to the user's name.
+
 ## Screenshots
 
 [Add screenshots when UI is complete]
