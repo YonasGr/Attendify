@@ -92,17 +92,18 @@ android/
 ### 4. Technical Implementation ✅
 
 #### Modern Android Stack
-- **Language**: Kotlin 1.9.20
+- **Language**: Kotlin 1.9.22
+- **Build System**: Gradle 8.5
 - **UI**: Jetpack Compose with Material 3
 - **Min SDK**: 24 (Android 7.0)
 - **Target SDK**: 34 (Android 14)
 
 #### Key Libraries
-- Jetpack Compose BOM 2023.10.01
-- Hilt 2.48 for DI
-- Retrofit 2.9.0 + Gson
-- OkHttp 4.12.0 with logging
-- Navigation Compose 2.7.5
+- Jetpack Compose BOM 2024.02.00
+- Hilt 2.50 for Dependency Injection
+- KSP 1.9.22-1.0.17 for annotation processing
+- Room 2.6.1 for local database
+- Navigation Compose 2.7.7
 - DataStore Preferences 1.0.0
 - ZXing 4.3.0 for QR scanning
 - Coil 2.5.0 for image loading
@@ -115,20 +116,28 @@ android/
 - Unidirectional data flow
 
 ### 5. Build Configuration ✅
-- Gradle 8.2 with Kotlin DSL
+- Gradle 8.5 with Kotlin DSL
+- Migrated from KAPT to KSP for faster builds
 - ProGuard rules for release builds
 - Build variants (debug/release)
-- BuildConfig support for API URL
+- BuildConfig support enabled
 
 ### 6. Documentation ✅
 - Comprehensive `android/README.md` with:
   - Setup instructions
   - Feature list
   - Tech stack overview
-  - API documentation
   - Build instructions
   - Troubleshooting guide
   - Roadmap
+
+- New `android/BUILD_REQUIREMENTS.md` with:
+  - Detailed build configuration guide
+  - Version compatibility matrix
+  - KAPT to KSP migration guide
+  - Network requirements and mirrors
+  - CI/CD configuration examples
+  - Comprehensive troubleshooting
   
 - Updated root `README.md` with Android app info
 - Code comments throughout
