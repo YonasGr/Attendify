@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Attendify</string>
+    <string name="login">Iniciar sesión</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="student_dashboard">Panel de Estudiante</string>
+    <string name="instructor_dashboard">Panel de Instructor</string>
+    <string name="admin_dashboard">Panel de Administrador</string>
+    <string name="scan_qr_code">Escanear código QR</string>
+    <string name="courses">Cursos</string>
+    <string name="attendance">Asistencia</string>
+    <string name="sessions">Sesiones</string>
+    <string name="users">Usuarios</string>
+</resources>

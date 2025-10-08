@@ -83,6 +83,30 @@ class LoginViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * Login with biometrics
+     */
+    fun loginWithBiometrics() {
+        viewModelScope.launch {
+            _loginState.value = LoginState.Loading
+            val user = authRepository.getCurrentUser()
+            if (user != null) {
+                _loginState.value = LoginState.Success(user)
+                _authState.value = AuthState(
+                    isAuthenticated = true,
+                    isLoading = false,
+                    user = user
+                )
+            } else {
+                _loginState.value = LoginState.Error("No user found for biometric login.")
+                _authState.value = _authState.value.copy(
+                    error = "No user found for biometric login.",
+                    isLoading = false
+                )
+            }
+        }
+    }
     
     /**
      * Logout user

@@ -1,15 +1,20 @@
 package com.attendify.app.ui.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.User
+import com.attendify.app.utils.BiometricAuthManager
 
 /**
  * Login screen with local authentication
@@ -23,7 +28,10 @@ fun LoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val loginState by viewModel.loginState.collectAsState()
-    
+    val context = LocalContext.current
+    val biometricAuthManager = remember { BiometricAuthManager(context) }
+    val isBiometricAvailable = remember { biometricAuthManager.isBiometricAuthAvailable() }
+
     // Navigate on successful login
     LaunchedEffect(loginState) {
         if (loginState is LoginState.Success) {
@@ -112,6 +120,28 @@ fun LoginScreen(
                     )
                 } else {
                     Text("Login", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+
+            if (isBiometricAvailable) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = {
+                        biometricAuthManager.showBiometricPrompt(
+                            activity = context as FragmentActivity,
+                            onSuccess = {
+                                viewModel.loginWithBiometrics()
+                            },
+                            onError = { _, _ ->
+                                // Handle error
+                            }
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Fingerprint, contentDescription = "Biometric Login")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Login with Biometrics")
                 }
             }
             
