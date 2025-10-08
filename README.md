@@ -260,6 +260,29 @@ The app includes a default profile logo displayed in the top app bar. To customi
 
 The profile logo appears on all dashboard screens (Student, Instructor, and Admin) in the top app bar next to the user's name.
 
+### App Launcher Icon
+
+The Attendify app comes with a professional launcher icon. To customize it with your own branding:
+
+1. **Using Android Studio** (Easiest):
+   - Right-click on `android/app/src/main/res`
+   - Select "New → Image Asset"
+   - Choose "Launcher Icons (Adaptive and Legacy)"
+   - Upload your icon and configure settings
+   - Android Studio generates all required densities automatically
+
+2. **Manual Replacement**:
+   - Prepare PNG icons for all densities (mdpi: 48x48, hdpi: 72x72, xhdpi: 96x96, xxhdpi: 144x144, xxxhdpi: 192x192)
+   - Replace files in `android/app/src/main/res/mipmap-*/ic_launcher.png`
+   - For adaptive icons (Android 8.0+), also create foreground layers in `mipmap-*/ic_launcher_foreground.png`
+
+3. **Using Online Tools**:
+   - Use Android Asset Studio (https://romannurik.github.io/AndroidAssetStudio/)
+   - Upload your icon and download generated assets
+   - Copy files to the appropriate mipmap directories
+
+**For detailed instructions, see [android/README.md](android/README.md#app-launcher-icon)**.
+
 ## Screenshots
 
 [Add screenshots when UI is complete]

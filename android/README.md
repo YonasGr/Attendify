@@ -295,6 +295,93 @@ The app displays a profile logo in the top app bar of all dashboard screens. To 
 
 The logo appears as a circular icon on the left side of the top app bar across all user roles (Student, Instructor, Admin).
 
+### App Launcher Icon
+
+The app includes a professional launcher icon with a purple background and white "A" letter. To replace it with your own custom icon:
+
+#### Method 1: Using Android Studio (Recommended)
+
+1. **Open Android Studio** and load the project
+2. **Right-click** on `app/src/main/res` in the Project view
+3. Select **"New → Image Asset"**
+4. In the Asset Studio window:
+   - **Asset Type**: Choose "Launcher Icons (Adaptive and Legacy)"
+   - **Name**: Keep as `ic_launcher`
+   - **Foreground Layer**: Upload your icon image or use clipart
+   - **Background Layer**: Set a solid color or upload a background image
+   - **Trim**: Adjust padding as needed
+5. **Preview** your icon across different densities and shapes
+6. Click **"Next"** and then **"Finish"**
+
+The Asset Studio automatically generates:
+- Standard icons for all densities (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi)
+- Adaptive icons for Android 8.0+ (API 26+)
+- Round icons for devices that support them
+- Preview images showing how it looks on different Android versions
+
+#### Method 2: Manual Replacement
+
+If you have pre-made icons for all densities:
+
+1. **Prepare your icons** with these exact sizes:
+   - `mipmap-mdpi/ic_launcher.png`: 48x48 pixels
+   - `mipmap-hdpi/ic_launcher.png`: 72x72 pixels
+   - `mipmap-xhdpi/ic_launcher.png`: 96x96 pixels
+   - `mipmap-xxhdpi/ic_launcher.png`: 144x144 pixels
+   - `mipmap-xxxhdpi/ic_launcher.png`: 192x192 pixels
+
+2. **For round icons** (optional but recommended):
+   - Create circular versions with the same sizes
+   - Name them `ic_launcher_round.png`
+   - Place in the same mipmap folders
+
+3. **For adaptive icons** (Android 8.0+):
+   - Create foreground layer images (108x108dp safe zone):
+     - `mipmap-mdpi/ic_launcher_foreground.png`: 108x108 pixels
+     - `mipmap-hdpi/ic_launcher_foreground.png`: 162x162 pixels
+     - `mipmap-xhdpi/ic_launcher_foreground.png`: 216x216 pixels
+     - `mipmap-xxhdpi/ic_launcher_foreground.png`: 324x324 pixels
+     - `mipmap-xxxhdpi/ic_launcher_foreground.png`: 432x432 pixels
+   - Edit `res/drawable/ic_launcher_background.xml` to set your background color:
+     ```xml
+     <?xml version="1.0" encoding="utf-8"?>
+     <shape xmlns:android="http://schemas.android.com/apk/res/android"
+         android:shape="rectangle">
+         <solid android:color="#YourColorHere" />
+     </shape>
+     ```
+
+4. **Replace the files** in the respective mipmap directories under:
+   ```
+   android/app/src/main/res/mipmap-*/
+   ```
+
+#### Method 3: Using Online Icon Generators
+
+Several free tools can generate all required densities:
+
+1. **Android Asset Studio** (https://romannurik.github.io/AndroidAssetStudio/):
+   - Upload your icon image
+   - Configure padding, shape, and colors
+   - Download generated assets
+   - Extract and copy to your project's res folder
+
+2. **App Icon Generator** (https://www.appicon.co/):
+   - Upload your icon
+   - Select "Android" as platform
+   - Download and extract files
+   - Copy to the appropriate mipmap directories
+
+#### Important Notes
+
+- **Icon Guidelines**: Follow Material Design icon guidelines for best results
+- **Size**: Original artwork should be at least 512x512 pixels
+- **Safe Zone**: For adaptive icons, keep important content within the center 66dp circle
+- **Testing**: Test on different devices to ensure the icon looks good across various shapes (circle, rounded square, squircle)
+- **No Alpha Channel**: Launcher icons should not have transparency in the background layer
+
+The manifest already references the icons as `@mipmap/ic_launcher` and `@mipmap/ic_launcher_round`, so no changes to `AndroidManifest.xml` are needed after replacing the icon files.
+
 ## Troubleshooting
 
 ### Common Issues
