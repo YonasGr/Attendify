@@ -18,6 +18,9 @@ import com.attendify.app.ui.student.QRCodeScannerScreen
 import com.attendify.app.ui.student.StudentCoursesScreen
 import com.attendify.app.ui.student.AttendanceHistoryScreen
 import com.attendify.app.ui.instructor.InstructorDashboardScreen
+import com.attendify.app.ui.instructor.InstructorCoursesScreen
+import com.attendify.app.ui.instructor.CreateCourseScreen
+import com.attendify.app.ui.instructor.SessionsScreen
 import com.attendify.app.ui.instructor.QRCodeDisplayScreen
 import com.attendify.app.ui.admin.AdminDashboardScreen
 
@@ -133,6 +136,54 @@ fun AttendifyApp() {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToCourses = {
+                    navController.navigate(Screen.InstructorCourses.route)
+                },
+                onNavigateToSessions = {
+                    navController.navigate(Screen.Sessions.route)
+                }
+            )
+        }
+        
+        composable(Screen.InstructorCourses.route) {
+            InstructorCoursesScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onCourseClick = { courseId ->
+                    navController.navigate(Screen.CourseDetails.createRoute(courseId))
+                },
+                onCreateCourse = {
+                    navController.navigate(Screen.CreateCourse.route)
+                }
+            )
+        }
+        
+        composable(Screen.CreateCourse.route) {
+            CreateCourseScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                }
+            )
+        }
+        
+        composable(Screen.Sessions.route) {
+            SessionsScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onSessionClick = { session ->
+                    navController.navigate(
+                        Screen.QRCodeDisplay.createRoute(
+                            session.id,
+                            session.title,
+                            session.qrCode
+                        )
+                    )
+                },
+                onCreateSession = {
+                    // TODO: Create session screen
                 }
             )
         }

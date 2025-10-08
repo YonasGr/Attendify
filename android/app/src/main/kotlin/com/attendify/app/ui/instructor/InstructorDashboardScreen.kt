@@ -1,5 +1,6 @@
 package com.attendify.app.ui.instructor
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,9 @@ import com.attendify.app.ui.auth.LoginViewModel
 fun InstructorDashboardScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     instructorViewModel: InstructorViewModel = hiltViewModel(),
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToCourses: () -> Unit = {},
+    onNavigateToSessions: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -62,7 +65,7 @@ fun InstructorDashboardScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* TODO: Create new course */ },
+                onClick = onNavigateToCourses,
                 icon = { Icon(Icons.Default.Add, "Add Course") },
                 text = { Text("New Course") },
                 containerColor = MaterialTheme.colorScheme.primary
@@ -86,7 +89,9 @@ fun InstructorDashboardScreen(
             
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToCourses),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -104,7 +109,7 @@ fun InstructorDashboardScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "My Courses",
                                     style = MaterialTheme.typography.titleMedium,
@@ -116,6 +121,11 @@ fun InstructorDashboardScreen(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View courses",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }
@@ -123,7 +133,9 @@ fun InstructorDashboardScreen(
             
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToSessions),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -141,7 +153,7 @@ fun InstructorDashboardScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Sessions",
                                     style = MaterialTheme.typography.titleMedium,
@@ -153,6 +165,11 @@ fun InstructorDashboardScreen(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View sessions",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
                         }
                     }
                 }
