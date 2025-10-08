@@ -20,11 +20,16 @@ import com.attendify.app.ui.auth.LoginViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstructorDashboardScreen(
-    viewModel: LoginViewModel = hiltViewModel(),
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    instructorViewModel: InstructorViewModel = hiltViewModel(),
     onLogout: () -> Unit
 ) {
-    val authState by viewModel.authState.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
+    
+    val courses by instructorViewModel.courses.collectAsState()
+    val sessions by instructorViewModel.sessions.collectAsState()
+    val isLoading by instructorViewModel.isLoading.collectAsState()
     
     Scaffold(
         topBar = {
@@ -42,7 +47,7 @@ fun InstructorDashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.logout()
+                        loginViewModel.logout()
                         onLogout()
                     }) {
                         Icon(Icons.Default.ExitToApp, "Logout")
@@ -87,26 +92,68 @@ fun InstructorDashboardScreen(
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Icon(
-                            Icons.Default.School,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "No courses created yet",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Create a course to start managing attendance",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.School,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "My Courses",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (isLoading) "Loading..." else "${courses.size} courses",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Event,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "Sessions",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (isLoading) "Loading..." else "${sessions.size} sessions",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
                     }
                 }
             }

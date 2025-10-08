@@ -20,11 +20,18 @@ import com.attendify.app.ui.auth.LoginViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
-    viewModel: LoginViewModel = hiltViewModel(),
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    adminViewModel: AdminViewModel = hiltViewModel(),
     onLogout: () -> Unit
 ) {
-    val authState by viewModel.authState.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
+    
+    val userCount by adminViewModel.userCount.collectAsState()
+    val courseCount by adminViewModel.courseCount.collectAsState()
+    val sessionCount by adminViewModel.sessionCount.collectAsState()
+    val attendanceCount by adminViewModel.attendanceCount.collectAsState()
+    val isLoading by adminViewModel.isLoading.collectAsState()
     
     Scaffold(
         topBar = {
@@ -42,7 +49,7 @@ fun AdminDashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.logout()
+                        loginViewModel.logout()
                         onLogout()
                     }) {
                         Icon(Icons.Default.ExitToApp, "Logout")
@@ -80,13 +87,13 @@ fun AdminDashboardScreen(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.People,
                         title = "Users",
-                        value = "-"
+                        value = if (isLoading) "-" else "$userCount"
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.School,
                         title = "Courses",
-                        value = "-"
+                        value = if (isLoading) "-" else "$courseCount"
                     )
                 }
             }
@@ -100,13 +107,13 @@ fun AdminDashboardScreen(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Event,
                         title = "Sessions",
-                        value = "-"
+                        value = if (isLoading) "-" else "$sessionCount"
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.CheckCircle,
                         title = "Attendance",
-                        value = "-"
+                        value = if (isLoading) "-" else "$attendanceCount"
                     )
                 }
             }
