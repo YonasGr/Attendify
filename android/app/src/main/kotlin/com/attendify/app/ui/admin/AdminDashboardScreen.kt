@@ -1,5 +1,6 @@
 package com.attendify.app.ui.admin
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -20,11 +21,21 @@ import com.attendify.app.ui.auth.LoginViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
-    viewModel: LoginViewModel = hiltViewModel(),
-    onLogout: () -> Unit
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    adminViewModel: AdminViewModel = hiltViewModel(),
+    onLogout: () -> Unit,
+    onNavigateToUsers: () -> Unit = {},
+    onNavigateToCourses: () -> Unit = {},
+    onNavigateToEnrollments: () -> Unit = {}
 ) {
-    val authState by viewModel.authState.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
+    
+    val userCount by adminViewModel.userCount.collectAsState()
+    val courseCount by adminViewModel.courseCount.collectAsState()
+    val sessionCount by adminViewModel.sessionCount.collectAsState()
+    val attendanceCount by adminViewModel.attendanceCount.collectAsState()
+    val isLoading by adminViewModel.isLoading.collectAsState()
     
     Scaffold(
         topBar = {
@@ -42,7 +53,7 @@ fun AdminDashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.logout()
+                        loginViewModel.logout()
                         onLogout()
                     }) {
                         Icon(Icons.Default.ExitToApp, "Logout")
@@ -80,13 +91,13 @@ fun AdminDashboardScreen(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.People,
                         title = "Users",
-                        value = "-"
+                        value = if (isLoading) "-" else "$userCount"
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.School,
                         title = "Courses",
-                        value = "-"
+                        value = if (isLoading) "-" else "$courseCount"
                     )
                 }
             }
@@ -100,13 +111,13 @@ fun AdminDashboardScreen(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Event,
                         title = "Sessions",
-                        value = "-"
+                        value = if (isLoading) "-" else "$sessionCount"
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.CheckCircle,
                         title = "Attendance",
-                        value = "-"
+                        value = if (isLoading) "-" else "$attendanceCount"
                     )
                 }
             }
@@ -124,7 +135,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.ManageAccounts,
                     title = "User Management",
-                    description = "Manage users and assign roles"
+                    description = "Manage users and assign roles",
+                    onClick = onNavigateToUsers
                 )
             }
             
@@ -132,7 +144,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.LibraryBooks,
                     title = "Course Management",
-                    description = "Create and manage courses"
+                    description = "Create and manage courses",
+                    onClick = onNavigateToCourses
                 )
             }
             
@@ -140,7 +153,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.PersonAdd,
                     title = "Enrollment Management",
-                    description = "Enroll students in courses"
+                    description = "Enroll students in courses",
+                    onClick = onNavigateToEnrollments
                 )
             }
             
@@ -148,7 +162,8 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.Analytics,
                     title = "Analytics",
-                    description = "View attendance statistics and reports"
+                    description = "View attendance statistics and reports",
+                    onClick = { }
                 )
             }
         }
@@ -198,10 +213,13 @@ private fun StatCard(
 private fun FeatureCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    description: String
+    description: String,
+    onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

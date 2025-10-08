@@ -1,5 +1,6 @@
 package com.attendify.app.ui.student
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -20,11 +21,19 @@ import com.attendify.app.ui.auth.LoginViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentDashboardScreen(
-    viewModel: LoginViewModel = hiltViewModel(),
-    onLogout: () -> Unit
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    studentViewModel: StudentViewModel = hiltViewModel(),
+    onLogout: () -> Unit,
+    onNavigateToQRScanner: () -> Unit = {},
+    onNavigateToCourses: () -> Unit = {},
+    onNavigateToAttendance: () -> Unit = {}
 ) {
-    val authState by viewModel.authState.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
+    
+    val enrolledCourses by studentViewModel.enrolledCourses.collectAsState()
+    val attendanceRecords by studentViewModel.attendanceRecords.collectAsState()
+    val isLoading by studentViewModel.isLoading.collectAsState()
     
     Scaffold(
         topBar = {
@@ -42,7 +51,7 @@ fun StudentDashboardScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.logout()
+                        loginViewModel.logout()
                         onLogout()
                     }) {
                         Icon(Icons.Default.ExitToApp, "Logout")
@@ -57,7 +66,7 @@ fun StudentDashboardScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* TODO: Navigate to QR Scanner */ },
+                onClick = onNavigateToQRScanner,
                 icon = { Icon(Icons.Default.QrCodeScanner, "Scan QR") },
                 text = { Text("Scan QR Code") },
                 containerColor = MaterialTheme.colorScheme.primary
@@ -81,32 +90,88 @@ fun StudentDashboardScreen(
             
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToCourses),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Icon(
-                            Icons.Default.Book,
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "No courses enrolled yet",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Contact your instructor to get enrolled",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Book,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Enrolled Courses",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (isLoading) "Loading..." else "${enrolledCourses.size} courses",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View courses",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
+            }
+            
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToAttendance),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Attendance Records",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (isLoading) "Loading..." else "${attendanceRecords.size} records",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View attendance",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
                     }
                 }
             }
