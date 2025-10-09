@@ -13,26 +13,52 @@ import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
     primary = Primary,
-    onPrimary = Surface,
-    primaryContainer = PrimaryVariant,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE0E7FF), // Indigo-100
+    onPrimaryContainer = Color(0xFF312E81), // Indigo-900
     secondary = Secondary,
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFD1FAE5), // Emerald-100
+    onSecondaryContainer = Color(0xFF065F46), // Emerald-800
+    tertiary = Tertiary,
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFEDE9FE), // Violet-100
+    onTertiaryContainer = Color(0xFF5B21B6), // Violet-800
     background = Background,
-    surface = Surface,
-    error = Error,
     onBackground = TextPrimary,
-    onSurface = TextPrimary
+    surface = Surface,
+    onSurface = TextPrimary,
+    surfaceVariant = Color(0xFFF1F5F9), // Slate-100
+    onSurfaceVariant = TextSecondary,
+    error = Error,
+    onError = Color.White,
+    errorContainer = Color(0xFFFEE2E2), // Red-100
+    onErrorContainer = Color(0xFF991B1B) // Red-800
 )
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
-    onPrimary = DarkSurface,
+    onPrimary = Color(0xFF312E81), // Indigo-900
     primaryContainer = DarkPrimaryVariant,
-    secondary = Secondary,
+    onPrimaryContainer = Color(0xFFE0E7FF), // Indigo-100
+    secondary = DarkSecondary,
+    onSecondary = Color(0xFF065F46), // Emerald-800
+    secondaryContainer = Color(0xFF047857), // Emerald-700
+    onSecondaryContainer = Color(0xFFD1FAE5), // Emerald-100
+    tertiary = DarkTertiary,
+    onTertiary = Color(0xFF5B21B6), // Violet-800
+    tertiaryContainer = Color(0xFF7C3AED), // Violet-600
+    onTertiaryContainer = Color(0xFFEDE9FE), // Violet-100
     background = DarkBackground,
-    surface = DarkSurface,
-    error = DarkError,
     onBackground = DarkTextPrimary,
-    onSurface = DarkTextPrimary
+    surface = DarkSurface,
+    onSurface = DarkTextPrimary,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = DarkTextSecondary,
+    error = DarkError,
+    onError = Color(0xFF7F1D1D), // Red-900
+    errorContainer = Color(0xFFDC2626), // Red-600
+    onErrorContainer = Color(0xFFFEE2E2) // Red-100
 )
 
 @Composable

@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,10 @@ fun AdminDashboardScreen(
             TopAppBar(
                 title = { 
                     Column {
-                        Text("Admin Dashboard")
+                        Text(
+                            "Admin Dashboard",
+                            fontWeight = FontWeight.Bold
+                        )
                         user?.let {
                             Text(
                                 text = "${it.firstName} ${it.lastName}",
@@ -58,15 +62,20 @@ fun AdminDashboardScreen(
                     }
                 },
                 navigationIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_profile_logo),
-                        contentDescription = "Profile",
+                    Surface(
                         modifier = Modifier
                             .padding(8.dp)
-                            .size(40.dp)
-                            .clip(CircleShape),
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
+                            .size(40.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_profile_logo),
+                            contentDescription = "Profile",
+                            modifier = Modifier.padding(8.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 },
                 actions = {
                     IconButton(onClick = {
@@ -88,13 +97,65 @@ fun AdminDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+            
+            // Welcome card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Shield,
+                                contentDescription = null,
+                                modifier = Modifier.padding(12.dp),
+                                tint = MaterialTheme.colorScheme.onError
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "System Administrator",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                            )
+                            user?.let {
+                                Text(
+                                    text = "${it.firstName} ${it.lastName}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Text(
+                                    text = "Full System Access",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
             item {
                 Text(
-                    text = "System Overview",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = "System Statistics",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -102,19 +163,23 @@ fun AdminDashboardScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.People,
                         title = "Users",
-                        value = if (isLoading) "-" else "$userCount"
+                        value = if (isLoading) "-" else "$userCount",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.School,
                         title = "Courses",
-                        value = if (isLoading) "-" else "$courseCount"
+                        value = if (isLoading) "-" else "$courseCount",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
@@ -122,28 +187,32 @@ fun AdminDashboardScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Event,
                         title = "Sessions",
-                        value = if (isLoading) "-" else "$sessionCount"
+                        value = if (isLoading) "-" else "$sessionCount",
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.CheckCircle,
                         title = "Attendance",
-                        value = if (isLoading) "-" else "$attendanceCount"
+                        value = if (isLoading) "-" else "$attendanceCount",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
             
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Administration",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = "Management",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -152,8 +221,10 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.ManageAccounts,
                     title = "User Management",
-                    description = "Manage users and assign roles",
-                    onClick = onNavigateToUsers
+                    description = "Create and manage users, assign roles",
+                    onClick = onNavigateToUsers,
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             
@@ -161,8 +232,10 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.AutoMirrored.Filled.LibraryBooks,
                     title = "Course Management",
-                    description = "Create and manage courses",
-                    onClick = onNavigateToCourses
+                    description = "Create, edit, and manage all courses",
+                    onClick = onNavigateToCourses,
+                    backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
             
@@ -170,19 +243,25 @@ fun AdminDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.PersonAdd,
                     title = "Enrollment Management",
-                    description = "Enroll students in courses",
-                    onClick = onNavigateToEnrollments
+                    description = "Manage student course enrollments",
+                    onClick = onNavigateToEnrollments,
+                    backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
             
             item {
                 FeatureCard(
                     icon = Icons.Default.Analytics,
-                    title = "Analytics",
-                    description = "View attendance statistics and reports",
-                    onClick = { }
+                    title = "Analytics & Reports",
+                    description = "View attendance statistics and generate reports",
+                    onClick = { },
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
+            
+            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
@@ -192,13 +271,16 @@ private fun StatCard(
     modifier: Modifier = Modifier,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    value: String
+    value: String,
+    containerColor: Color,
+    contentColor: Color
 ) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+            containerColor = containerColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -208,19 +290,19 @@ private fun StatCard(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                tint = contentColor
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = contentColor
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = contentColor.copy(alpha = 0.8f)
             )
         }
     }
@@ -231,36 +313,55 @@ private fun FeatureCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     description: String,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    backgroundColor: Color,
+    contentColor: Color
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Surface(
+                shape = CircleShape,
+                color = contentColor.copy(alpha = 0.2f),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.padding(12.dp),
+                    tint = contentColor
+                )
+            }
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = contentColor
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = contentColor.copy(alpha = 0.7f)
                 )
             }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = "Open",
+                tint = contentColor.copy(alpha = 0.3f)
+            )
         }
     }
 }

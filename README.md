@@ -1,6 +1,17 @@
 # Attendify
 
-A fully offline native Android application for university attendance tracking.
+A fully offline native Android application for university attendance tracking with a modern, professional UI.
+
+## 🎨 Recent Updates
+
+**Major UI/UX Overhaul (January 2025)**
+- ✨ Modern, professional color scheme (Indigo, Emerald, Violet)
+- 🎯 Enhanced dashboards with welcome cards and statistics
+- 📊 Rich demo content with 8 students, 3 instructors, 8 courses
+- 🚀 Create Session screen with date picker and validation
+- 💎 Improved cards with elevation, shadows, and better spacing
+- 🎨 Semantic colors for status and roles
+- 📱 Material 3 design throughout
 
 ## Overview
 
@@ -92,10 +103,29 @@ The native Android app is built with:
 
 ### First Time Setup
 
-On first launch, the app will create a local database with default users:
+On first launch, the app will create a local database with demo users and content:
+
+**Demo Accounts:**
 - **Admin**: username: `admin`, password: `admin123`
-- **Instructor**: username: `instructor`, password: `instructor123`
-- **Student**: username: `student`, password: `student123`
+- **Instructors**:
+  - John Smith (CS): `instructor` / `instructor123`
+  - Sarah Williams (Math): `dr.williams` / `instructor123`
+  - Robert Anderson (Physics): `prof.anderson` / `instructor123`
+- **Students**:
+  - Alice Johnson (CS): `student` / `student123`
+  - Bob Miller (CS): `bob.miller` / `student123`
+  - Carol Davis (Math): `carol.davis` / `student123`
+  - David Brown (Physics): `david.brown` / `student123`
+  - Emma Wilson (CS): `emma.wilson` / `student123`
+  - Frank Taylor (Math): `frank.taylor` / `student123`
+  - Grace Lee (Physics): `grace.lee` / `student123`
+  - Henry Martin (CS): `henry.martin` / `student123`
+
+**Demo Content:**
+- 8 courses across Computer Science, Mathematics, and Physics departments
+- 12 scheduled sessions with QR codes for attendance
+- Sample attendance records showing realistic usage
+- Student enrollments across multiple courses
 
 See [android/README.md](android/README.md) for complete setup instructions and documentation.
 
@@ -195,28 +225,42 @@ For issues and questions:
 
 ## Roadmap
 
-### Phase 1 (Complete)
+### Phase 1 (Complete) ✅
 - ✅ Android app scaffold and architecture
 - ✅ Room database integration
 - ✅ Local authentication
 - ✅ Role-based navigation
 - ✅ QR code generation and scanning
 - ✅ Complete offline functionality
+- ✅ Modern UI/UX with Material 3 design
+- ✅ Enhanced color scheme and theming
+- ✅ Rich demo content for onboarding
 
-### Phase 2 (Current)
-- ✅ Course management
-- ✅ Session management
-- ✅ Attendance tracking
-- ✅ User management
-- ✅ Analytics and reporting
-- ✅ Biometric authentication
-- ✅ Dark mode enhancements
-- ✅ Multi-language support
+### Phase 2 (Complete) ✅
+- ✅ Course management (Create, View, Manage)
+- ✅ Session management (Create, View, QR Display)
+- ✅ Attendance tracking (Scan, Record, History)
+- ✅ User management (Create, View, Filter by role)
+- ✅ Analytics and reporting dashboards
+- ✅ Biometric authentication support
+- ✅ Dark mode support
+- ✅ Professional dashboard designs
 
-### Phase 3 (Future)
-- 🔄 Data export/import functionality
-- 🔄 Advanced analytics dashboards
-- 🔄 Backup and restore
+### Phase 3 (In Progress) 🔄
+- ✅ Create Session screen with validation
+- 🔄 Enrollment Management interface
+- 🔄 Course Details with session list
+- 🔄 Session Details with attendance list
+- 🔄 Edit functionality for entities
+- 🔄 Delete with confirmation dialogs
+
+### Phase 4 (Future) 📋
+- 📋 Data export/import functionality
+- 📋 Advanced analytics with charts
+- 📋 Backup and restore
+- 📋 Multi-language support
+- 📋 Push notifications
+- 📋 Tablet optimization
 
 ## Data Management
 

@@ -139,7 +139,10 @@ class InstructorViewModel @Inject constructor(
         title: String,
         scheduledDate: Long,
         startTime: String,
-        endTime: String
+        endTime: String,
+        isActive: Boolean = true,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -153,20 +156,25 @@ class InstructorViewModel @Inject constructor(
                     scheduledDate = scheduledDate,
                     startTime = startTime,
                     endTime = endTime,
-                    isActive = true
+                    isActive = isActive
                 )
 
                 if (result.isSuccess) {
                     _successMessage.value = "Session created successfully"
                     loadInstructorData() // Refresh data
+                    onSuccess()
                 } else {
-                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to create session"
+                    val error = result.exceptionOrNull()?.message ?: "Failed to create session"
+                    _errorMessage.value = error
+                    onError(error)
                 }
                 
                 _isLoading.value = false
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Failed to create session"
+                val error = e.message ?: "Failed to create session"
+                _errorMessage.value = error
                 _isLoading.value = false
+                onError(error)
             }
         }
     }
