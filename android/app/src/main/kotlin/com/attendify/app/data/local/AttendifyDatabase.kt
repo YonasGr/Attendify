@@ -17,7 +17,7 @@ import com.attendify.app.data.local.entity.*
         EnrollmentEntity::class,
         AttendanceRecordEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AttendifyDatabase : RoomDatabase() {

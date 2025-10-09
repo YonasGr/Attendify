@@ -25,6 +25,10 @@ class DatabaseSeeder @Inject constructor(private val database: AttendifyDatabase
             val studentId6 = UUID.randomUUID().toString()
             val studentId7 = UUID.randomUUID().toString()
             val studentId8 = UUID.randomUUID().toString()
+            val studentId9 = UUID.randomUUID().toString()
+            val studentId10 = UUID.randomUUID().toString()
+            val studentId11 = UUID.randomUUID().toString()
+            val studentId12 = UUID.randomUUID().toString()
 
             val users = listOf(
                 UserEntity(
@@ -170,6 +174,54 @@ class DatabaseSeeder @Inject constructor(private val database: AttendifyDatabase
                     role = "student",
                     studentId = "STU008",
                     department = "Computer Science"
+                ),
+                UserEntity(
+                    id = studentId9,
+                    username = "isabel.garcia",
+                    password = "student123",
+                    email = "isabel.garcia@student.attendify.com",
+                    firstName = "Isabel",
+                    lastName = "Garcia",
+                    profileImageUrl = null,
+                    role = "student",
+                    studentId = "STU009",
+                    department = "Mathematics"
+                ),
+                UserEntity(
+                    id = studentId10,
+                    username = "jack.rodriguez",
+                    password = "student123",
+                    email = "jack.rodriguez@student.attendify.com",
+                    firstName = "Jack",
+                    lastName = "Rodriguez",
+                    profileImageUrl = null,
+                    role = "student",
+                    studentId = "STU010",
+                    department = "Physics"
+                ),
+                UserEntity(
+                    id = studentId11,
+                    username = "kate.anderson",
+                    password = "student123",
+                    email = "kate.anderson@student.attendify.com",
+                    firstName = "Kate",
+                    lastName = "Anderson",
+                    profileImageUrl = null,
+                    role = "student",
+                    studentId = "STU011",
+                    department = "Computer Science"
+                ),
+                UserEntity(
+                    id = studentId12,
+                    username = "liam.thomas",
+                    password = "student123",
+                    email = "liam.thomas@student.attendify.com",
+                    firstName = "Liam",
+                    lastName = "Thomas",
+                    profileImageUrl = null,
+                    role = "student",
+                    studentId = "STU012",
+                    department = "Mathematics"
                 )
             )
             
@@ -184,6 +236,10 @@ class DatabaseSeeder @Inject constructor(private val database: AttendifyDatabase
             val courseId6 = UUID.randomUUID().toString()
             val courseId7 = UUID.randomUUID().toString()
             val courseId8 = UUID.randomUUID().toString()
+            val courseId9 = UUID.randomUUID().toString()
+            val courseId10 = UUID.randomUUID().toString()
+            val courseId11 = UUID.randomUUID().toString()
+            val courseId12 = UUID.randomUUID().toString()
             
             val courses = listOf(
                 // Computer Science courses
@@ -258,6 +314,42 @@ class DatabaseSeeder @Inject constructor(private val database: AttendifyDatabase
                     name = "Software Engineering",
                     description = "Software development lifecycle, design patterns, testing, agile methodologies, and project management.",
                     instructorId = instructorId1,
+                    semester = "Fall",
+                    year = 2024
+                ),
+                CourseEntity(
+                    id = courseId9,
+                    code = "MATH301",
+                    name = "Differential Equations",
+                    description = "First and second order differential equations, Laplace transforms, and applications to physics and engineering.",
+                    instructorId = instructorId2,
+                    semester = "Spring",
+                    year = 2025
+                ),
+                CourseEntity(
+                    id = courseId10,
+                    code = "CS501",
+                    name = "Machine Learning",
+                    description = "Introduction to machine learning algorithms, supervised and unsupervised learning, neural networks.",
+                    instructorId = instructorId1,
+                    semester = "Spring",
+                    year = 2025
+                ),
+                CourseEntity(
+                    id = courseId11,
+                    code = "PHYS301",
+                    name = "Quantum Mechanics",
+                    description = "Wave functions, Schrödinger equation, operators, quantum states, and applications.",
+                    instructorId = instructorId3,
+                    semester = "Fall",
+                    year = 2024
+                ),
+                CourseEntity(
+                    id = courseId12,
+                    code = "MATH401",
+                    name = "Abstract Algebra",
+                    description = "Groups, rings, fields, and their applications in cryptography and coding theory.",
+                    instructorId = instructorId2,
                     semester = "Fall",
                     year = 2024
                 )

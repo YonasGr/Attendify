@@ -76,4 +76,18 @@ class AttendanceRepository @Inject constructor(
             Result.failure(e)
         }
     }
+    
+    suspend fun removeAttendance(sessionId: String, studentId: String): Result<Unit> {
+        return try {
+            val record = attendanceRecordDao.getAttendanceRecord(sessionId, studentId)
+            if (record != null) {
+                attendanceRecordDao.deleteAttendanceRecord(record)
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Attendance record not found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

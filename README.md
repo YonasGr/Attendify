@@ -4,10 +4,19 @@ A fully offline native Android application for university attendance tracking wi
 
 ## 🎨 Recent Updates
 
-**Major UI/UX Overhaul (January 2025)**
+**Core Feature Implementation (January 2025)**
+- 🔐 **Biometric Authentication**: Secure fingerprint/face login after initial setup
+- ⚙️ **Settings Screen**: User preferences and biometric management
+- 📱 **Enhanced Student UI**: Profile avatars, upcoming sessions, settings access
+- 👨‍🏫 **Instructor Tools**: Manual enrollment, attendance marking, comprehensive tracking
+- 👤 **12+ Demo Accounts**: Realistic testing environment with students and instructors
+- 📚 **12+ Demo Courses**: CS, Math, and Physics courses across multiple semesters
+- 🌐 **Cloud Sync Ready**: REST API scaffold for online database integration
+- 📖 **Comprehensive Documentation**: Professional setup guides and API docs
+
+**Previous Major UI/UX Overhaul (January 2025)**
 - ✨ Modern, professional color scheme (Indigo, Emerald, Violet)
 - 🎯 Enhanced dashboards with welcome cards and statistics
-- 📊 Rich demo content with 8 students, 3 instructors, 8 courses
 - 🚀 Create Session screen with date picker and validation
 - 💎 Improved cards with elevation, shadows, and better spacing
 - 🎨 Semantic colors for status and roles
@@ -21,14 +30,18 @@ Attendify is a modern attendance management system designed for universities, bu
 
 ```
 Attendify/
-└── android/         # Native Android application (Kotlin + Jetpack Compose)
-    ├── app/
-    │   └── src/main/kotlin/com/attendify/app/
-    │       ├── data/          # Data layer with Room database
-    │       ├── di/            # Dependency injection (Hilt)
-    │       ├── ui/            # UI layer (Jetpack Compose)
-    │       └── utils/         # Utility classes
-    └── ...
+├── android/         # Native Android application (Kotlin + Jetpack Compose)
+│   ├── app/
+│   │   └── src/main/kotlin/com/attendify/app/
+│   │       ├── data/          # Data layer with Room database
+│   │       ├── di/            # Dependency injection (Hilt)
+│   │       ├── ui/            # UI layer (Jetpack Compose)
+│   │       └── utils/         # Utility classes
+│   └── ...
+└── server/          # REST API server for cloud synchronization (Node.js + Express)
+    ├── routes/      # API endpoints
+    ├── server.js    # Main server file
+    └── README.md    # Server documentation
 ```
 
 ## Android Application
@@ -51,16 +64,20 @@ The native Android app is built with:
 - 📱 View enrolled courses
 - 📷 Scan QR codes to mark attendance
 - 📊 Track attendance history
-- 📅 View session schedules
+- 📅 View upcoming sessions
+- 🔐 Biometric login (fingerprint/face)
+- ⚙️ Settings and preferences
 - 📴 Full offline functionality
 
 ### For Instructors
 - 📚 Create and manage courses
 - 🎫 Generate QR codes for attendance sessions
 - 👥 Track student attendance in real-time
-- ➕ Enroll students in courses
+- ➕ Manual student enrollment (for missed QR scans)
+- ✏️ Manual attendance marking
+- 📊 Comprehensive session management
 - 📈 View attendance analytics
-- 📊 Session management
+- ⚙️ Settings and preferences
 
 ### For Admins
 - 👤 Manage users and assign roles
@@ -68,6 +85,15 @@ The native Android app is built with:
 - 📊 System-wide analytics and reporting
 - 🔧 System administration
 - 👥 Comprehensive user management
+- ⚙️ Settings and preferences
+
+### Cloud Synchronization (Server)
+- 🌐 REST API for data sync
+- 📤 Upload local changes to cloud
+- 📥 Download server updates
+- 🔄 Conflict resolution
+- 🔒 JWT authentication
+- 🗄️ PostgreSQL database support
 
 ## Quick Start
 
@@ -108,22 +134,26 @@ On first launch, the app will create a local database with demo users and conten
 **Demo Accounts:**
 - **Admin**: username: `admin`, password: `admin123`
 - **Instructors**:
-  - John Smith (CS): `instructor` / `instructor123`
-  - Sarah Williams (Math): `dr.williams` / `instructor123`
-  - Robert Anderson (Physics): `prof.anderson` / `instructor123`
-- **Students**:
+  - John Doe (CS): `instructor` / `instructor123`
+  - Jane Smith (Math): `jane.smith` / `instructor123`
+  - Robert Jones (Physics): `robert.jones` / `instructor123`
+- **Students** (12 total):
   - Alice Johnson (CS): `student` / `student123`
-  - Bob Miller (CS): `bob.miller` / `student123`
-  - Carol Davis (Math): `carol.davis` / `student123`
+  - Bob Williams (CS): `bob.williams` / `student123`
+  - Carol Jones (Math): `carol.jones` / `student123`
   - David Brown (Physics): `david.brown` / `student123`
   - Emma Wilson (CS): `emma.wilson` / `student123`
   - Frank Taylor (Math): `frank.taylor` / `student123`
   - Grace Lee (Physics): `grace.lee` / `student123`
   - Henry Martin (CS): `henry.martin` / `student123`
+  - Isabel Garcia (Math): `isabel.garcia` / `student123`
+  - Jack Rodriguez (Physics): `jack.rodriguez` / `student123`
+  - Kate Anderson (CS): `kate.anderson` / `student123`
+  - Liam Thomas (Math): `liam.thomas` / `student123`
 
 **Demo Content:**
-- 8 courses across Computer Science, Mathematics, and Physics departments
-- 12 scheduled sessions with QR codes for attendance
+- 12 courses across Computer Science, Mathematics, and Physics departments
+- 12+ scheduled sessions with QR codes for attendance
 - Sample attendance records showing realistic usage
 - Student enrollments across multiple courses
 
@@ -179,13 +209,22 @@ The application follows modern Android architecture with MVVM pattern:
 - **Database**: Room (SQLite)
 - **Async**: Kotlin Coroutines + Flow
 - **QR Codes**: ZXing for scanning and generation
+- **Biometric Auth**: AndroidX Biometric library
 - **Local Storage**: DataStore for preferences
 - **Min SDK**: 24 (Android 7.0)
 - **Target SDK**: 34 (Android 14)
 
+### REST API Server
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: PostgreSQL (cloud-ready)
+- **Authentication**: JWT (JSON Web Tokens)
+- **Password Hashing**: bcrypt
+- **CORS**: Enabled for cross-origin requests
+
 ## Development
 
-### Building the App
+### Building the Android App
 ```bash
 # In Android Studio, or via command line:
 cd android
@@ -202,6 +241,36 @@ cd android
 ```bash
 ./gradlew assembleRelease
 ```
+
+### Running the REST API Server
+
+**Prerequisites:**
+- Node.js v16 or higher
+- PostgreSQL database
+
+**Installation:**
+```bash
+cd server
+npm install
+```
+
+**Configuration:**
+```bash
+cp .env.example .env
+# Edit .env with your database URL and JWT secret
+```
+
+**Development:**
+```bash
+npm run dev
+```
+
+**Production:**
+```bash
+npm start
+```
+
+**See [server/README.md](server/README.md) for detailed server documentation.**
 
 ## Contributing
 

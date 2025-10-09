@@ -16,7 +16,8 @@ fun UserEntity.toModel(): User = User(
     profileImageUrl = profileImageUrl,
     role = role,
     studentId = studentId,
-    department = department
+    department = department,
+    biometricEnabled = biometricEnabled
 )
 
 fun User.toEntity(password: String): UserEntity = UserEntity(
@@ -29,7 +30,8 @@ fun User.toEntity(password: String): UserEntity = UserEntity(
     profileImageUrl = profileImageUrl,
     role = role,
     studentId = studentId,
-    department = department
+    department = department,
+    biometricEnabled = biometricEnabled
 )
 
 // Course mappings

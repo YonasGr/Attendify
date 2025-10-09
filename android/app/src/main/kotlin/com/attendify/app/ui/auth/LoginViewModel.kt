@@ -30,6 +30,17 @@ class LoginViewModel @Inject constructor(
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState.asStateFlow()
     
+    val isBiometricEnabledForUser: StateFlow<Boolean> = flow {
+        while (true) {
+            emit(authRepository.isBiometricEnabledForUser())
+            kotlinx.coroutines.delay(1000) // Check every second
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+    
     init {
         checkAuthStatus()
     }

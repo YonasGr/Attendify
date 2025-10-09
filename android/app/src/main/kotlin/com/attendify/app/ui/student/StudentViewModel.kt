@@ -37,8 +37,8 @@ class StudentViewModel @Inject constructor(
     private val _attendanceRecords = MutableStateFlow<List<AttendanceRecord>>(emptyList())
     val attendanceRecords: StateFlow<List<AttendanceRecord>> = _attendanceRecords.asStateFlow()
 
-    private val _upcomingSessions = MutableStateFlow<List<Session>>(emptyList())
-    val upcomingSessions: StateFlow<List<Session>> = _upcomingSessions.asStateFlow()
+    private val _upcomingSessions = MutableStateFlow<List<Pair<Session, Course?>>>(emptyList())
+    val upcomingSessions: StateFlow<List<Pair<Session, Course?>>> = _upcomingSessions.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -86,10 +86,16 @@ class StudentViewModel @Inject constructor(
                 // Load upcoming sessions from enrolled courses
                 val courseIds = _enrolledCourses.value.map { it.id }
                 sessionRepository.getAllSessions().collect { allSessions ->
-                    _upcomingSessions.value = allSessions
+                    val sessions = allSessions
                         .filter { it.courseId in courseIds && it.isActive }
                         .sortedBy { it.scheduledDate }
                         .map { it.toModel() }
+                    
+                    // Pair each session with its course
+                    _upcomingSessions.value = sessions.map { session ->
+                        val course = _enrolledCourses.value.find { it.id == session.courseId }
+                        Pair(session, course)
+                    }
                 }
                 
                 _isLoading.value = false

@@ -19,6 +19,7 @@ data class UserEntity(
     val role: String, // "student", "instructor", "admin"
     val studentId: String?,
     val department: String?,
+    val biometricEnabled: Boolean = false, // Track if user has enabled biometric login
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

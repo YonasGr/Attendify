@@ -45,4 +45,7 @@ interface UserDao {
     
     @Query("SELECT COUNT(*) FROM users WHERE role = 'instructor'")
     fun getInstructorCount(): Flow<Int>
+    
+    @Query("UPDATE users SET biometricEnabled = :enabled WHERE id = :userId")
+    suspend fun updateBiometricEnabled(userId: String, enabled: Boolean)
 }

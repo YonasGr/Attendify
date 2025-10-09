@@ -33,7 +33,8 @@ fun AdminDashboardScreen(
     onLogout: () -> Unit,
     onNavigateToUsers: () -> Unit = {},
     onNavigateToCourses: () -> Unit = {},
-    onNavigateToEnrollments: () -> Unit = {}
+    onNavigateToEnrollments: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -78,6 +79,9 @@ fun AdminDashboardScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, "Settings")
+                    }
                     IconButton(onClick = {
                         loginViewModel.logout()
                         onLogout()
