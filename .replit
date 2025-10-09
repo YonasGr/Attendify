@@ -35,7 +35,7 @@ args = "Start application"
 
 [[workflows.workflow]]
 name = "Start application"
-author = "agent"
+author = "Mr Jonah"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
