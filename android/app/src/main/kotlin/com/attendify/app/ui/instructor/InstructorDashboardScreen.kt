@@ -30,7 +30,8 @@ fun InstructorDashboardScreen(
     instructorViewModel: InstructorViewModel = hiltViewModel(),
     onLogout: () -> Unit,
     onNavigateToCourses: () -> Unit = {},
-    onNavigateToSessions: () -> Unit = {}
+    onNavigateToSessions: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -73,6 +74,9 @@ fun InstructorDashboardScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, "Settings")
+                    }
                     IconButton(onClick = {
                         loginViewModel.logout()
                         onLogout()

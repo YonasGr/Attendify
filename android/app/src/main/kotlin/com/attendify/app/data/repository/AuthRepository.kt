@@ -108,4 +108,22 @@ class AuthRepository @Inject constructor(
     fun isAuthenticated(): Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[CURRENT_USER_ID_KEY] != null
     }
+    
+    /**
+     * Enable or disable biometric authentication for current user
+     */
+    suspend fun setBiometricEnabled(enabled: Boolean) {
+        val userId = getCurrentUserId().first()
+        if (userId != null) {
+            userDao.updateBiometricEnabled(userId, enabled)
+        }
+    }
+    
+    /**
+     * Check if biometric is enabled for current user
+     */
+    suspend fun isBiometricEnabledForUser(): Boolean {
+        val user = getCurrentUser()
+        return user?.biometricEnabled ?: false
+    }
 }

@@ -31,7 +31,9 @@ fun StudentDashboardScreen(
     onLogout: () -> Unit,
     onNavigateToQRScanner: () -> Unit = {},
     onNavigateToCourses: () -> Unit = {},
-    onNavigateToAttendance: () -> Unit = {}
+    onNavigateToAttendance: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToUpcomingSessions: () -> Unit = {}
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = authState.user
@@ -74,6 +76,9 @@ fun StudentDashboardScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, "Settings")
+                    }
                     IconButton(onClick = {
                         loginViewModel.logout()
                         onLogout()
@@ -280,6 +285,54 @@ fun StudentDashboardScreen(
                                 )
                                 Text(
                                     text = if (isLoading) "Loading..." else "${attendanceRecords.size} attendance records",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "View",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                        }
+                    }
+                }
+            }
+            
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onNavigateToUpcomingSessions),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Schedule,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(10.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Upcoming Sessions",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "View your scheduled classes",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )

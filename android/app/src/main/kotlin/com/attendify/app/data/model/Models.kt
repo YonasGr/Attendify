@@ -12,7 +12,8 @@ data class User(
     val profileImageUrl: String?,
     val role: String, // "student", "instructor", "admin"
     val studentId: String?,
-    val department: String?
+    val department: String?,
+    val biometricEnabled: Boolean = false
 )
 
 /**

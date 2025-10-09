@@ -27,4 +27,6 @@ sealed class Screen(val route: String) {
     object SessionDetails : Screen("session_details/{sessionId}") {
         fun createRoute(sessionId: String) = "session_details/$sessionId"
     }
+    object Settings : Screen("settings")
+    object UpcomingSessions : Screen("upcoming_sessions")
 }

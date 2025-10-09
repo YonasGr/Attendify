@@ -31,6 +31,9 @@ fun LoginScreen(
     val context = LocalContext.current
     val biometricAuthManager = remember { BiometricAuthManager(context) }
     val isBiometricAvailable = remember { biometricAuthManager.isBiometricAuthAvailable() }
+    
+    // Check if user has biometric enabled
+    val isBiometricEnabledForUser by viewModel.isBiometricEnabledForUser.collectAsState()
 
     // Navigate on successful login
     LaunchedEffect(loginState) {
@@ -162,8 +165,8 @@ fun LoginScreen(
                         }
                     }
 
-                    // Biometric login option
-                    if (isBiometricAvailable) {
+                    // Biometric login option (only show if user has enabled it)
+                    if (isBiometricAvailable && isBiometricEnabledForUser) {
                         Spacer(modifier = Modifier.height(12.dp))
                         OutlinedButton(
                             onClick = {
