@@ -11,10 +11,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.User
 import com.attendify.app.utils.BiometricAuthManager
+import com.attendify.app.utils.findActivity
 
 /**
  * Login screen with local authentication
@@ -128,7 +128,7 @@ fun LoginScreen(
                 OutlinedButton(
                     onClick = {
                         biometricAuthManager.showBiometricPrompt(
-                            activity = context as FragmentActivity,
+                            activity = context.findActivity(),
                             onSuccess = {
                                 viewModel.loginWithBiometrics()
                             },

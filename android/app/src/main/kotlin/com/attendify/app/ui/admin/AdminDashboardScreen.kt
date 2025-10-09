@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -71,7 +73,7 @@ fun AdminDashboardScreen(
                         loginViewModel.logout()
                         onLogout()
                     }) {
-                        Icon(Icons.Default.ExitToApp, "Logout")
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, "Logout")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -157,7 +159,7 @@ fun AdminDashboardScreen(
             
             item {
                 FeatureCard(
-                    icon = Icons.Default.LibraryBooks,
+                    icon = Icons.AutoMirrored.Filled.LibraryBooks,
                     title = "Course Management",
                     description = "Create and manage courses",
                     onClick = onNavigateToCourses

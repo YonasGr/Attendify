@@ -1,5 +1,6 @@
 package com.attendify.app.ui.instructor
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.attendify.app.data.model.AttendanceRecord
@@ -11,6 +12,7 @@ import com.attendify.app.data.repository.AuthRepository
 import com.attendify.app.data.repository.CourseRepository
 import com.attendify.app.data.repository.EnrollmentRepository
 import com.attendify.app.data.repository.SessionRepository
+import com.attendify.app.utils.QRCodeGenerator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +38,9 @@ class InstructorViewModel @Inject constructor(
 
     private val _sessions = MutableStateFlow<List<Session>>(emptyList())
     val sessions: StateFlow<List<Session>> = _sessions.asStateFlow()
+
+    private val _qrCodeBitmap = MutableStateFlow<Bitmap?>(null)
+    val qrCodeBitmap: StateFlow<Bitmap?> = _qrCodeBitmap.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -164,6 +169,22 @@ class InstructorViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun generateQrCodeForSession(session: Session) {
+        viewModelScope.launch {
+            try {
+                // Use the session ID or a unique token for the QR code
+                val qrCodeContent = session.id 
+                _qrCodeBitmap.value = QRCodeGenerator.generateQRCode(qrCodeContent)
+            } catch (e: Exception) {
+                _errorMessage.value = "Could not generate QR code: ${e.message}"
+            }
+        }
+    }
+
+    fun clearQrCode() {
+        _qrCodeBitmap.value = null
     }
 
     fun getAttendanceForSession(sessionId: String): StateFlow<List<AttendanceRecord>> {
