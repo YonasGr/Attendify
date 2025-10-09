@@ -20,6 +20,7 @@ import com.attendify.app.ui.student.AttendanceHistoryScreen
 import com.attendify.app.ui.instructor.InstructorDashboardScreen
 import com.attendify.app.ui.instructor.InstructorCoursesScreen
 import com.attendify.app.ui.instructor.CreateCourseScreen
+import com.attendify.app.ui.instructor.CreateSessionScreen
 import com.attendify.app.ui.instructor.SessionsScreen
 import com.attendify.app.ui.instructor.QRCodeDisplayScreen
 import com.attendify.app.ui.admin.AdminDashboardScreen
@@ -185,7 +186,18 @@ fun AttendifyApp() {
                     )
                 },
                 onCreateSession = {
-                    // TODO: Create session screen
+                    navController.navigate(Screen.CreateSession.route)
+                }
+            )
+        }
+        
+        composable(Screen.CreateSession.route) {
+            CreateSessionScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onSessionCreated = {
+                    navController.navigateUp()
                 }
             )
         }
