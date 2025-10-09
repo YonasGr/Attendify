@@ -42,7 +42,7 @@ fun LoginScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Attendify") },
+                title = { Text("Attendify", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -54,129 +54,182 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Welcome to Attendify",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "University Attendance System",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-            
-            Spacer(modifier = Modifier.height(48.dp))
-            
-            // Username Input
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username") },
-                placeholder = { Text("Enter your username") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = loginState !is LoginState.Loading
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Password Input
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                placeholder = { Text("Enter your password") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                enabled = loginState !is LoginState.Loading
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            Button(
-                onClick = {
-                    if (username.isNotBlank() && password.isNotBlank()) {
-                        viewModel.login(username, password)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = username.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading
-            ) {
-                if (loginState is LoginState.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Login", style = MaterialTheme.typography.titleMedium)
-                }
-            }
-
-            if (isBiometricAvailable) {
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = {
-                        biometricAuthManager.showBiometricPrompt(
-                            activity = context.findActivity(),
-                            onSuccess = {
-                                viewModel.loginWithBiometrics()
-                            },
-                            onError = { _, _ ->
-                                // Handle error
-                            }
-                        )
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Fingerprint, contentDescription = "Biometric Login")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Login with Biometrics")
-                }
-            }
-            
-            // Error message
-            if (loginState is LoginState.Error) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = (loginState as LoginState.Error).message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
+            // App branding section
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Welcome to Attendify",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "📚 University Attendance Management System",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Login form card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Text(
+                        text = "Sign In",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Username Input
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Username") },
+                        placeholder = { Text("Enter your username") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = loginState !is LoginState.Loading,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Password Input
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        placeholder = { Text("Enter your password") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        enabled = loginState !is LoginState.Loading,
+                        shape = MaterialTheme.shapes.medium
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Login Button
+                    Button(
+                        onClick = {
+                            if (username.isNotBlank() && password.isNotBlank()) {
+                                viewModel.login(username, password)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = username.isNotBlank() && password.isNotBlank() && loginState !is LoginState.Loading,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        if (loginState is LoginState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                "Sign In",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Biometric login option
+                    if (isBiometricAvailable) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = {
+                                biometricAuthManager.showBiometricPrompt(
+                                    activity = context.findActivity(),
+                                    onSuccess = {
+                                        viewModel.loginWithBiometrics()
+                                    },
+                                    onError = { _, _ ->
+                                        // Handle error
+                                    }
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Icon(Icons.Default.Fingerprint, contentDescription = "Biometric Login")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sign In with Biometrics")
+                        }
+                    }
+                    
+                    // Error message
+                    if (loginState is LoginState.Error) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Text(
+                                text = (loginState as LoginState.Error).message,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Demo credentials card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Default Accounts:",
+                        text = "📝 Demo Accounts",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Admin: username: admin, password: admin123\n" +
-                                "Instructor: username: instructor, password: instructor123\n" +
-                                "Student: username: student, password: student123",
-                        style = MaterialTheme.typography.bodySmall
+                        text = "👤 Admin: admin / admin123\n" +
+                                "🧑‍🏫 Instructor: instructor / instructor123\n" +
+                                "🎓 Student: student / student123",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }

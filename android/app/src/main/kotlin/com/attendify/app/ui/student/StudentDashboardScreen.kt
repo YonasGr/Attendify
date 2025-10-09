@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,10 @@ fun StudentDashboardScreen(
             TopAppBar(
                 title = { 
                     Column {
-                        Text("Student Dashboard")
+                        Text(
+                            "Student Dashboard",
+                            fontWeight = FontWeight.Bold
+                        )
                         user?.let {
                             Text(
                                 text = "${it.firstName} ${it.lastName}",
@@ -54,15 +58,20 @@ fun StudentDashboardScreen(
                     }
                 },
                 navigationIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_profile_logo),
-                        contentDescription = "Profile",
+                    Surface(
                         modifier = Modifier
                             .padding(8.dp)
-                            .size(40.dp)
-                            .clip(CircleShape),
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
+                            .size(40.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_profile_logo),
+                            contentDescription = "Profile",
+                            modifier = Modifier.padding(8.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 },
                 actions = {
                     IconButton(onClick = {
@@ -84,7 +93,8 @@ fun StudentDashboardScreen(
                 onClick = onNavigateToQRScanner,
                 icon = { Icon(Icons.Default.QrCodeScanner, "Scan QR") },
                 text = { Text("Scan QR Code") },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
             )
         }
     ) { paddingValues ->
@@ -92,13 +102,98 @@ fun StudentDashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item { Spacer(modifier = Modifier.height(8.dp)) }
+            
+            // Welcome card
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(56.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.School,
+                                contentDescription = null,
+                                modifier = Modifier.padding(12.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Welcome back!",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            user?.let {
+                                Text(
+                                    text = "${it.firstName} ${it.lastName}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = "ID: ${it.studentId ?: "N/A"} • ${it.department ?: "N/A"}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
             item {
                 Text(
-                    text = "My Courses",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = "Quick Stats",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            // Stats row
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.Book,
+                        title = "Courses",
+                        value = if (isLoading) "-" else "${enrolledCourses.size}",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        icon = Icons.Default.CheckCircle,
+                        title = "Records",
+                        value = if (isLoading) "-" else "${attendanceRecords.size}",
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+            
+            item {
+                Text(
+                    text = "My Learning",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -108,23 +203,27 @@ fun StudentDashboardScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = onNavigateToCourses),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(20.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.Book,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Book,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(10.dp),
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "Enrolled Courses",
@@ -132,15 +231,15 @@ fun StudentDashboardScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = if (isLoading) "Loading..." else "${enrolledCourses.size} courses",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = if (isLoading) "Loading..." else "${enrolledCourses.size} active courses",
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
                             Icon(
                                 Icons.Default.ChevronRight,
-                                contentDescription = "View courses",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                contentDescription = "View",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )
                         }
                     }
@@ -152,39 +251,43 @@ fun StudentDashboardScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable(onClick = onNavigateToAttendance),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(20.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                modifier = Modifier.size(48.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(10.dp),
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Attendance Records",
+                                    text = "Attendance History",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = if (isLoading) "Loading..." else "${attendanceRecords.size} records",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = if (isLoading) "Loading..." else "${attendanceRecords.size} attendance records",
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
                             }
                             Icon(
                                 Icons.Default.ChevronRight,
-                                contentDescription = "View attendance",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                contentDescription = "View",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )
                         }
                     }
@@ -192,10 +295,10 @@ fun StudentDashboardScreen(
             }
             
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Features",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -204,15 +307,19 @@ fun StudentDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.QrCodeScanner,
                     title = "QR Code Scanning",
-                    description = "Scan QR codes to mark attendance in sessions"
+                    description = "Scan QR codes to mark your attendance in sessions",
+                    backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
             
             item {
                 FeatureCard(
                     icon = Icons.Default.History,
-                    title = "Attendance History",
-                    description = "View your attendance records for all courses"
+                    title = "Track Your Progress",
+                    description = "View detailed attendance records for all your courses",
+                    backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
             
@@ -220,9 +327,55 @@ fun StudentDashboardScreen(
                 FeatureCard(
                     icon = Icons.Default.Schedule,
                     title = "Session Schedule",
-                    description = "See upcoming sessions for your courses"
+                    description = "Stay updated with upcoming sessions and schedules",
+                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
+            
+            item { Spacer(modifier = Modifier.height(80.dp)) } // FAB padding
+        }
+    }
+}
+
+@Composable
+private fun StatCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    value: String,
+    containerColor: Color,
+    contentColor: Color
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = contentColor
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = contentColor.copy(alpha = 0.8f)
+            )
         }
     }
 }
@@ -231,32 +384,46 @@ fun StudentDashboardScreen(
 private fun FeatureCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    description: String
+    description: String,
+    backgroundColor: Color,
+    contentColor: Color
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = backgroundColor
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                modifier = Modifier.size(40.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Surface(
+                shape = CircleShape,
+                color = contentColor.copy(alpha = 0.2f),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.padding(12.dp),
+                    tint = contentColor
+                )
+            }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = contentColor
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = contentColor.copy(alpha = 0.7f)
                 )
             }
         }
