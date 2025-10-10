@@ -181,6 +181,89 @@ fun SettingsScreen(
                 }
             }
             
+            // Data Synchronization section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Data Synchronization",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Divider()
+                    
+                    // Last sync time
+                    val lastSyncTime by viewModel.lastSyncTime.collectAsState()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Last Sync",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = lastSyncTime?.let {
+                                    val timeDiff = System.currentTimeMillis() - it
+                                    when {
+                                        timeDiff < 60_000 -> "Just now"
+                                        timeDiff < 3600_000 -> "${timeDiff / 60_000} minutes ago"
+                                        timeDiff < 86400_000 -> "${timeDiff / 3600_000} hours ago"
+                                        else -> "${timeDiff / 86400_000} days ago"
+                                    }
+                                } ?: "Never",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            Icons.Default.Cloud,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Sync button
+                    Button(
+                        onClick = { viewModel.syncData() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = settingsState !is SettingsState.Syncing && settingsState !is SettingsState.Loading
+                    ) {
+                        if (settingsState is SettingsState.Syncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Syncing...")
+                        } else {
+                            Icon(Icons.Default.Sync, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sync Now")
+                        }
+                    }
+                    
+                    Text(
+                        text = "Backend: attendify-mpsw.onrender.com",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            
             // Show success/error messages
             if (settingsState is SettingsState.Success) {
                 Card(

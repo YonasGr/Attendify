@@ -94,6 +94,9 @@ The native Android app is built with:
 - 🔄 Conflict resolution
 - 🔒 JWT authentication
 - 🗄️ PostgreSQL database support
+- ☁️ **Production Backend**: https://attendify-mpsw.onrender.com
+- 🔄 **Automatic Sync**: Seamless integration with live server
+- 💾 **Offline-First**: Local Room database with cloud backup
 
 ## Quick Start
 
@@ -159,6 +162,75 @@ On first launch, the app will create a local database with demo users and conten
 
 See [android/README.md](android/README.md) for complete setup instructions and documentation.
 
+## Backend Integration
+
+The Attendify Android app now integrates with the production backend at **https://attendify-mpsw.onrender.com**.
+
+### Architecture
+
+The app follows an **offline-first architecture**:
+
+1. **Local Database (Room/SQLite)**: Primary data store for instant access and offline functionality
+2. **Backend API (Render)**: Cloud storage for data synchronization across devices
+3. **Automatic Sync**: Background synchronization when network is available
+4. **Fallback Support**: Local data is used when backend is unreachable
+
+### Network Features
+
+- ✅ **Authentication**: Login and registration with JWT tokens
+- ✅ **User Management**: Sync user profiles and roles
+- ✅ **Course Operations**: Create, read, update courses with backend
+- ✅ **Session Management**: Sync attendance sessions and QR codes
+- ✅ **Attendance Tracking**: Real-time attendance submission to server
+- ✅ **Enrollment Sync**: Student course enrollments synchronized
+- ✅ **Error Handling**: Robust retry logic and offline fallback
+- ✅ **Token Management**: Automatic token refresh and storage
+
+### API Configuration
+
+The app is pre-configured to use the production backend. The base URL is set in `android/app/build.gradle.kts`:
+
+```kotlin
+buildConfigField("String", "API_BASE_URL", "\"https://attendify-mpsw.onrender.com/api/\"")
+```
+
+To change the backend URL (e.g., for local development):
+
+1. Edit `android/app/build.gradle.kts`
+2. Update the `API_BASE_URL` value
+3. Sync Gradle and rebuild
+
+**Development URLs:**
+- **Local backend**: `"http://10.0.2.2:3000/api/"` (Android emulator)
+- **Network device**: `"http://192.168.x.x:3000/api/"` (replace with your IP)
+- **Production**: `"https://attendify-mpsw.onrender.com/api/"` (default)
+
+### Data Synchronization
+
+The app automatically syncs data when:
+- User logs in
+- User manually triggers sync (Settings screen)
+- App returns to foreground after being offline
+
+**Sync Process:**
+1. Upload local changes to server
+2. Download updates from server
+3. Merge changes with conflict resolution (last-write-wins)
+4. Update local database
+
+**Manual Sync:**
+Navigate to Settings → Sync Data to manually trigger synchronization.
+
+### Offline Functionality
+
+All features work offline using the local database:
+- View courses and sessions
+- Mark attendance (synced when online)
+- Access user profiles
+- View attendance history
+
+Data is queued and automatically synchronized when network connectivity is restored.
+
 ## Architecture
 
 The application follows modern Android architecture with MVVM pattern:
@@ -206,11 +278,13 @@ The application follows modern Android architecture with MVVM pattern:
 - **Architecture**: MVVM with Repository pattern
 - **Dependency Injection**: Hilt 2.50
 - **Code Generation**: KSP (Kotlin Symbol Processing)
-- **Database**: Room (SQLite)
+- **Database**: Room (SQLite) for offline storage
+- **Networking**: Retrofit 2.9.0 + OkHttp 4.12.0
+- **JSON Parsing**: Gson 2.10.1
 - **Async**: Kotlin Coroutines + Flow
 - **QR Codes**: ZXing for scanning and generation
 - **Biometric Auth**: AndroidX Biometric library
-- **Local Storage**: DataStore for preferences
+- **Local Storage**: DataStore for preferences and tokens
 - **Min SDK**: 24 (Android 7.0)
 - **Target SDK**: 34 (Android 14)
 
@@ -221,6 +295,8 @@ The application follows modern Android architecture with MVVM pattern:
 - **Authentication**: JWT (JSON Web Tokens)
 - **Password Hashing**: bcrypt
 - **CORS**: Enabled for cross-origin requests
+- **Hosting**: Render.com (Production)
+- **URL**: https://attendify-mpsw.onrender.com
 
 ## Development
 

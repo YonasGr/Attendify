@@ -25,6 +25,9 @@ interface EnrollmentDao {
     @Query("SELECT * FROM enrollments")
     fun getAllEnrollments(): Flow<List<EnrollmentEntity>>
     
+    @Query("SELECT * FROM enrollments")
+    suspend fun getAllEnrollmentsOnce(): List<EnrollmentEntity>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEnrollment(enrollment: EnrollmentEntity)
     

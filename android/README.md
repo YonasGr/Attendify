@@ -33,17 +33,25 @@ A fully offline native Android application for university attendance tracking. B
 - **Architecture**: MVVM with Repository pattern
 - **Dependency Injection**: Hilt 2.50
 - **Code Generation**: KSP (Kotlin Symbol Processing)
-- **Local Database**: Room (SQLite)
+- **Local Database**: Room (SQLite) for offline storage
+- **Networking**: Retrofit 2.9.0 + OkHttp 4.12.0
+- **JSON Parsing**: Gson 2.10.1
 - **Async Operations**: Kotlin Coroutines + Flow
 - **QR Code Scanning**: ZXing
 - **QR Code Generation**: ZXing
-- **Local Storage**: DataStore (for authentication)
+- **Local Storage**: DataStore (for authentication and sync state)
+- **Backend Integration**: REST API at https://attendify-mpsw.onrender.com
 
 ## Project Structure
 
 ```
 app/src/main/kotlin/com/attendify/app/
 ├── data/
+│   ├── api/               # Backend API integration
+│   │   ├── ApiModels.kt   # Request/Response DTOs
+│   │   ├── ApiMappers.kt  # DTO to domain model mappers
+│   │   ├── AttendifyApiService.kt  # Retrofit service
+│   │   └── Interceptors.kt         # Auth & error handling
 │   ├── local/            # Room database
 │   │   ├── entity/       # Room entities
 │   │   ├── dao/          # Data Access Objects
@@ -51,12 +59,19 @@ app/src/main/kotlin/com/attendify/app/
 │   │   └── DatabaseSeeder.kt
 │   ├── model/            # UI models
 │   └── repository/       # Repository layer
+│       ├── AuthRepository.kt
+│       ├── NetworkRepository.kt  # Backend API operations
+│       ├── SyncManager.kt        # Data synchronization
+│       ├── CourseRepository.kt
+│       ├── SessionRepository.kt
+│       └── AttendanceRepository.kt
 ├── di/                   # Dependency injection modules
 ├── ui/
 │   ├── auth/            # Login screen & ViewModel
 │   ├── student/         # Student dashboard
 │   ├── instructor/      # Instructor dashboard
 │   ├── admin/           # Admin dashboard
+│   ├── settings/        # Settings with sync controls
 │   ├── components/      # Reusable UI components
 │   └── theme/           # App theme and styling
 ├── utils/               # Utility classes
@@ -127,9 +142,107 @@ The app also creates:
 - 3 sample sessions
 - Sample enrollments for the student account
 
+## Backend Integration
+
+The app integrates with a production backend at **https://attendify-mpsw.onrender.com** for cloud data synchronization.
+
+### Offline-First Architecture
+
+The app follows an **offline-first** approach:
+
+1. **Local Database (Room/SQLite)**: Primary data store
+   - All data is stored locally for instant access
+   - Full offline functionality
+   - No network required for core features
+
+2. **Backend API (Render)**: Cloud synchronization
+   - Automatic background sync when network is available
+   - Manual sync via Settings screen
+   - JWT token authentication
+
+3. **Automatic Fallback**: 
+   - If backend is unreachable, app continues with local data
+   - Changes are queued and synced when connectivity returns
+
+### Network Features
+
+- ✅ **Authentication**: Login/register with backend JWT tokens
+- ✅ **User Sync**: Profile and role synchronization
+- ✅ **Course Management**: Create and sync courses
+- ✅ **Session Sync**: Attendance sessions and QR codes
+- ✅ **Attendance Tracking**: Real-time attendance submission
+- ✅ **Enrollment Sync**: Student-course relationships
+- ✅ **Conflict Resolution**: Last-write-wins strategy
+
+### Configuring Backend URL
+
+The backend URL is configured in `app/build.gradle.kts`:
+
+```kotlin
+defaultConfig {
+    // ...
+    buildConfigField("String", "API_BASE_URL", "\"https://attendify-mpsw.onrender.com/api/\"")
+}
+```
+
+**To change the backend URL:**
+
+1. Edit `app/build.gradle.kts`
+2. Update the `API_BASE_URL` value:
+   - **Production**: `"https://attendify-mpsw.onrender.com/api/"`
+   - **Local dev (emulator)**: `"http://10.0.2.2:3000/api/"`
+   - **Local dev (device)**: `"http://192.168.x.x:3000/api/"` (replace with your IP)
+3. Sync Gradle
+4. Rebuild the app
+
+### Data Synchronization
+
+**Automatic Sync:**
+- On app launch (if network available)
+- When user logs in
+- After major data changes
+
+**Manual Sync:**
+1. Open Settings (gear icon in dashboard)
+2. Scroll to "Data Synchronization" section
+3. Tap "Sync Now" button
+4. View sync progress and last sync time
+
+**What Gets Synced:**
+- User profiles and authentication
+- Courses and sessions
+- Student enrollments
+- Attendance records
+- QR codes
+
+### Offline Functionality
+
+All features work offline:
+- ✅ View courses and sessions
+- ✅ Mark attendance (synced when online)
+- ✅ Access user profiles
+- ✅ View attendance history
+- ✅ Generate QR codes
+
+Data is automatically synchronized when network connectivity is restored.
+
+### API Documentation
+
+For backend API details, see [../server/README.md](../server/README.md).
+
+Available endpoints:
+- `POST /api/auth/login` - User authentication
+- `POST /api/auth/register` - User registration
+- `GET /api/courses` - List all courses
+- `POST /api/courses` - Create a course
+- `GET /api/sessions` - List all sessions
+- `POST /api/attendance` - Mark attendance
+- `POST /api/sync/upload` - Upload local changes
+- `GET /api/sync/download` - Download server data
+
 ## Authentication
 
-The app uses local username/password authentication stored in Room database.
+The app uses hybrid authentication:
 
 **⚠️ Security Note**: For production use, implement proper password hashing (e.g., BCrypt, Argon2) instead of plain text storage.
 

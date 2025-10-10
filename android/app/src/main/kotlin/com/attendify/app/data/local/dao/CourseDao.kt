@@ -16,6 +16,9 @@ interface CourseDao {
     @Query("SELECT * FROM courses")
     fun getAllCourses(): Flow<List<CourseEntity>>
     
+    @Query("SELECT * FROM courses")
+    suspend fun getAllCoursesOnce(): List<CourseEntity>
+    
     @Query("SELECT * FROM courses WHERE instructorId = :instructorId")
     fun getCoursesByInstructor(instructorId: String): Flow<List<CourseEntity>>
     

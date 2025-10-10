@@ -25,6 +25,12 @@ interface SessionDao {
     @Query("SELECT * FROM sessions ORDER BY scheduledDate DESC")
     fun getAllSessions(): Flow<List<SessionEntity>>
     
+    @Query("SELECT * FROM sessions ORDER BY scheduledDate DESC")
+    suspend fun getAllSessionsOnce(): List<SessionEntity>
+    
+    @Query("SELECT * FROM sessions WHERE courseId = :courseId ORDER BY scheduledDate DESC")
+    suspend fun getSessionsForCourseOnce(courseId: String): List<SessionEntity>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: SessionEntity)
     

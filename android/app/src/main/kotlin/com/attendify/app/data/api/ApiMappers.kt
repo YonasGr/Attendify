@@ -1,13 +1,13 @@
-package com.attendify.app.data.model
+package com.attendify.app.data.api
 
-import com.attendify.app.data.local.entity.*
+import com.attendify.app.data.model.*
 
 /**
- * Extension functions to map between Room entities and UI models
+ * Extension functions to convert between API DTOs and domain models
  */
 
-// User mappings
-fun UserEntity.toModel(): User = User(
+// User conversions
+fun UserDto.toDomainModel(): User = User(
     id = id,
     username = username,
     email = email,
@@ -17,39 +17,23 @@ fun UserEntity.toModel(): User = User(
     role = role,
     studentId = studentId,
     department = department,
-    biometricEnabled = biometricEnabled
+    biometricEnabled = false // This is local-only
 )
 
-fun User.toEntity(password: String): UserEntity = UserEntity(
+fun User.toDto(): UserDto = UserDto(
     id = id,
     username = username,
-    password = password,
     email = email,
     firstName = firstName,
     lastName = lastName,
     profileImageUrl = profileImageUrl,
     role = role,
     studentId = studentId,
-    department = department,
-    biometricEnabled = biometricEnabled
+    department = department
 )
 
-fun User.toEntity(): UserEntity = UserEntity(
-    id = id,
-    username = username,
-    password = "", // Default empty password for backend-sourced users
-    email = email,
-    firstName = firstName,
-    lastName = lastName,
-    profileImageUrl = profileImageUrl,
-    role = role,
-    studentId = studentId,
-    department = department,
-    biometricEnabled = biometricEnabled
-)
-
-// Course mappings
-fun CourseEntity.toModel(): Course = Course(
+// Course conversions
+fun CourseDto.toDomainModel(): Course = Course(
     id = id,
     code = code,
     name = name,
@@ -59,7 +43,7 @@ fun CourseEntity.toModel(): Course = Course(
     year = year
 )
 
-fun Course.toEntity(): CourseEntity = CourseEntity(
+fun Course.toDto(): CourseDto = CourseDto(
     id = id,
     code = code,
     name = name,
@@ -69,8 +53,17 @@ fun Course.toEntity(): CourseEntity = CourseEntity(
     year = year
 )
 
-// Session mappings
-fun SessionEntity.toModel(): Session = Session(
+fun Course.toCreateRequest(): CreateCourseRequest = CreateCourseRequest(
+    code = code,
+    name = name,
+    description = description,
+    instructorId = instructorId,
+    semester = semester,
+    year = year
+)
+
+// Session conversions
+fun SessionDto.toDomainModel(): Session = Session(
     id = id,
     courseId = courseId,
     title = title,
@@ -81,7 +74,7 @@ fun SessionEntity.toModel(): Session = Session(
     isActive = isActive
 )
 
-fun Session.toEntity(): SessionEntity = SessionEntity(
+fun Session.toDto(): SessionDto = SessionDto(
     id = id,
     courseId = courseId,
     title = title,
@@ -92,8 +85,16 @@ fun Session.toEntity(): SessionEntity = SessionEntity(
     isActive = isActive
 )
 
-// AttendanceRecord mappings
-fun AttendanceRecordEntity.toModel(): AttendanceRecord = AttendanceRecord(
+fun Session.toCreateRequest(): CreateSessionRequest = CreateSessionRequest(
+    courseId = courseId,
+    title = title,
+    scheduledDate = scheduledDate,
+    startTime = startTime,
+    endTime = endTime
+)
+
+// Attendance conversions
+fun AttendanceRecordDto.toDomainModel(): AttendanceRecord = AttendanceRecord(
     id = id,
     sessionId = sessionId,
     studentId = studentId,
@@ -101,7 +102,7 @@ fun AttendanceRecordEntity.toModel(): AttendanceRecord = AttendanceRecord(
     status = status
 )
 
-fun AttendanceRecord.toEntity(): AttendanceRecordEntity = AttendanceRecordEntity(
+fun AttendanceRecord.toDto(): AttendanceRecordDto = AttendanceRecordDto(
     id = id,
     sessionId = sessionId,
     studentId = studentId,
@@ -109,15 +110,20 @@ fun AttendanceRecord.toEntity(): AttendanceRecordEntity = AttendanceRecordEntity
     status = status
 )
 
-// Enrollment mappings
-fun EnrollmentEntity.toModel(): Enrollment = Enrollment(
+// Enrollment conversions
+fun EnrollmentDto.toDomainModel(): Enrollment = Enrollment(
     id = id,
     courseId = courseId,
     studentId = studentId
 )
 
-fun Enrollment.toEntity(): EnrollmentEntity = EnrollmentEntity(
+fun Enrollment.toDto(): EnrollmentDto = EnrollmentDto(
     id = id,
+    courseId = courseId,
+    studentId = studentId
+)
+
+fun Enrollment.toCreateRequest(): CreateEnrollmentRequest = CreateEnrollmentRequest(
     courseId = courseId,
     studentId = studentId
 )

@@ -21,6 +21,9 @@ interface UserDao {
     
     @Query("SELECT * FROM users")
     fun getAllUsers(): Flow<List<UserEntity>>
+    
+    @Query("SELECT * FROM users")
+    suspend fun getAllUsersOnce(): List<UserEntity>
 
     @Query("SELECT COUNT(*) FROM users")
     suspend fun getUserCount(): Int

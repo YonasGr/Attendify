@@ -25,6 +25,9 @@ interface AttendanceRecordDao {
     @Query("SELECT * FROM attendance_records")
     fun getAllAttendanceRecords(): Flow<List<AttendanceRecordEntity>>
     
+    @Query("SELECT * FROM attendance_records")
+    suspend fun getAllAttendanceRecordsOnce(): List<AttendanceRecordEntity>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAttendanceRecord(record: AttendanceRecordEntity)
     
