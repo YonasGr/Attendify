@@ -1,34 +1,29 @@
 package com.attendify.app.ui.student
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.attendify.app.data.model.AttendanceRecord
 import com.attendify.app.data.model.Course
 import com.attendify.app.data.model.Session
-import com.attendify.app.data.model.toModel
-import com.attendify.app.data.repository.AttendanceRepository
 import com.attendify.app.data.repository.AuthRepository
-import com.attendify.app.data.repository.CourseRepository
-import com.attendify.app.data.repository.EnrollmentRepository
-import com.attendify.app.data.repository.SessionRepository
+import com.attendify.app.data.repository.NetworkRepository
+import com.attendify.app.utils.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * ViewModel for Student Dashboard and related screens
+ * ViewModel for Student Dashboard and related screens, with improved performance and stability.
  */
 @HiltViewModel
 class StudentViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val courseRepository: CourseRepository,
-    private val sessionRepository: SessionRepository,
-    private val enrollmentRepository: EnrollmentRepository,
-    private val attendanceRepository: AttendanceRepository
+    private val networkRepository: NetworkRepository
 ) : ViewModel() {
 
     private val _enrolledCourses = MutableStateFlow<List<Course>>(emptyList())
@@ -40,131 +35,114 @@ class StudentViewModel @Inject constructor(
     private val _upcomingSessions = MutableStateFlow<List<Pair<Session, Course?>>>(emptyList())
     val upcomingSessions: StateFlow<List<Pair<Session, Course?>>> = _upcomingSessions.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    private val _uiState = MutableStateFlow<Resource<Unit>>(Resource.Loading())
+    val uiState: StateFlow<Resource<Unit>> = _uiState.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-
-    private val _checkInMessage = MutableStateFlow<String?>(null)
-    val checkInMessage: StateFlow<String?> = _checkInMessage.asStateFlow()
+    private val _qrActionStatus = MutableStateFlow<Resource<String>?>(null)
+    val qrActionStatus: StateFlow<Resource<String>?> = _qrActionStatus.asStateFlow()
 
     init {
-        loadStudentData()
+        loadStudentDashboardData()
     }
 
-    fun loadStudentData() {
+    fun loadStudentDashboardData() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
-            
+            _uiState.value = Resource.Loading()
+            val user = authRepository.getCurrentUser()
+            if (user == null) {
+                _uiState.value = Resource.Error("User not authenticated.")
+                return@launch
+            }
+
+            // Fetch enrolled courses and attendance in parallel
+            val coursesJob = launch {
+                networkRepository.getCoursesByStudent(user.id).collectLatest { resource ->
+                    if (resource is Resource.Success) {
+                        _enrolledCourses.value = resource.data ?: emptyList()
+                        fetchUpcomingSessions(resource.data ?: emptyList())
+                    }
+                }
+            }
+            val attendanceJob = launch {
+                networkRepository.getAttendanceByStudent(user.id).collectLatest { resource ->
+                    if (resource is Resource.Success) {
+                        _attendanceRecords.value = resource.data ?: emptyList()
+                    }
+                }
+            }
+
+            coursesJob.join()
+            attendanceJob.join()
+            _uiState.value = Resource.Success(Unit)
+        }
+    }
+
+    private fun fetchUpcomingSessions(courses: List<Course>) {
+        viewModelScope.launch {
+            val activeSessions = mutableListOf<Pair<Session, Course?>>()
+            courses.forEach { course ->
+                networkRepository.getSessionsByCourse(course.id).collectLatest { sessionResource ->
+                    if (sessionResource is Resource.Success) {
+                        sessionResource.data?.filter { it.isActive }?.forEach {
+                            activeSessions.add(it to course)
+                        }
+                    }
+                }
+            }
+            _upcomingSessions.value = activeSessions.sortedBy { it.first.scheduledDate }
+        }
+    }
+
+    fun handleScannedQRCode(qrCodeValue: String) {
+        viewModelScope.launch {
+            _qrActionStatus.value = Resource.Loading()
+            val user = authRepository.getCurrentUser()
+            if (user?.studentId == null) {
+                _qrActionStatus.value = Resource.Error("User or Student ID not found.")
+                return@launch
+            }
+
             try {
-                val user = authRepository.getCurrentUser()
-                if (user == null) {
-                    _errorMessage.value = "User not found"
-                    _isLoading.value = false
+                val uri = Uri.parse(qrCodeValue)
+                if (uri.scheme != "attendify") {
+                    _qrActionStatus.value = Resource.Error("Invalid QR code format.")
                     return@launch
                 }
 
-                // Load enrollments
-                enrollmentRepository.getEnrollmentsByStudent(user.id).collect { enrollments ->
-                    val courseIds = enrollments.map { it.courseId }
-                    
-                    // Load enrolled courses
-                    courseRepository.getAllCourses().collect { allCourses ->
-                        _enrolledCourses.value = allCourses
-                            .filter { it.id in courseIds }
-                            .map { it.toModel() }
+                when (uri.host) {
+                    "enroll" -> {
+                        val courseId = uri.getQueryParameter("courseId")
+                        if (courseId == null) {
+                            _qrActionStatus.value = Resource.Error("Course ID missing from QR code.")
+                            return@launch
+                        }
+                        networkRepository.createEnrollment(courseId, user.studentId).collectLatest { result ->
+                            _qrActionStatus.value = result.map { "Enrolled successfully in course!" }
+                            if (result is Resource.Success) loadStudentDashboardData()
+                        }
+                    }
+                    "checkin" -> {
+                        val sessionId = uri.getQueryParameter("sessionId")
+                        if (sessionId == null) {
+                            _qrActionStatus.value = Resource.Error("Session ID missing from QR code.")
+                            return@launch
+                        }
+                        networkRepository.markAttendance(sessionId, user.studentId, qrCodeValue).collectLatest { result ->
+                            _qrActionStatus.value = result.map { "Checked in successfully!" }
+                            if (result is Resource.Success) loadStudentDashboardData()
+                        }
+                    }
+                    else -> {
+                        _qrActionStatus.value = Resource.Error("Unsupported QR code action.")
                     }
                 }
-
-                // Load attendance records
-                attendanceRepository.getAttendanceByStudent(user.id).collect { records ->
-                    _attendanceRecords.value = records.map { it.toModel() }
-                }
-
-                // Load upcoming sessions from enrolled courses
-                val courseIds = _enrolledCourses.value.map { it.id }
-                sessionRepository.getAllSessions().collect { allSessions ->
-                    val sessions = allSessions
-                        .filter { it.courseId in courseIds && it.isActive }
-                        .sortedBy { it.scheduledDate }
-                        .map { it.toModel() }
-                    
-                    // Pair each session with its course
-                    _upcomingSessions.value = sessions.map { session ->
-                        val course = _enrolledCourses.value.find { it.id == session.courseId }
-                        Pair(session, course)
-                    }
-                }
-                
-                _isLoading.value = false
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Failed to load data"
-                _isLoading.value = false
+                _qrActionStatus.value = Resource.Error(e.message ?: "Failed to process QR code.")
             }
         }
     }
 
-    fun checkInWithQRCode(qrCode: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _checkInMessage.value = null
-            
-            try {
-                val user = authRepository.getCurrentUser()
-                if (user == null) {
-                    _checkInMessage.value = "User not found"
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                // Find session by QR code
-                val session = sessionRepository.getSessionByQrCode(qrCode)
-                if (session == null) {
-                    _checkInMessage.value = "Invalid QR code"
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                if (!session.isActive) {
-                    _checkInMessage.value = "This session is not active"
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                // Check if student is enrolled in the course
-                val enrollments = enrollmentRepository.getEnrollmentsByStudent(user.id).first()
-                val isEnrolled = enrollments.any { it.courseId == session.courseId }
-                
-                if (!isEnrolled) {
-                    _checkInMessage.value = "You are not enrolled in this course"
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                // Check in
-                val result = attendanceRepository.checkIn(session.id, user.id)
-                if (result.isSuccess) {
-                    _checkInMessage.value = "Attendance marked successfully!"
-                    loadStudentData() // Refresh data
-                } else {
-                    _checkInMessage.value = result.exceptionOrNull()?.message ?: "Failed to mark attendance"
-                }
-                
-                _isLoading.value = false
-            } catch (e: Exception) {
-                _checkInMessage.value = e.message ?: "Failed to mark attendance"
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun clearCheckInMessage() {
-        _checkInMessage.value = null
-    }
-
-    fun clearErrorMessage() {
-        _errorMessage.value = null
+    fun clearQrActionStatus() {
+        _qrActionStatus.value = null
     }
 }

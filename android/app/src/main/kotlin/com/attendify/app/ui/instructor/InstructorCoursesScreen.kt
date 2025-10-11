@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.Course
+import com.attendify.app.utils.Resource
 
 /**
  * Instructor Courses List Screen
@@ -27,7 +29,8 @@ fun InstructorCoursesScreen(
     onCreateCourse: () -> Unit
 ) {
     val courses by viewModel.courses.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is Resource.Loading
     
     Scaffold(
         topBar = {
@@ -35,7 +38,7 @@ fun InstructorCoursesScreen(
                 title = { Text("My Courses") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

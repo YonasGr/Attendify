@@ -3,127 +3,152 @@ package com.attendify.app.data.api
 import com.attendify.app.data.model.*
 
 /**
- * Extension functions to convert between API DTOs and domain models
+ * Mappers for converting API DTOs to domain models
  */
 
-// User conversions
-fun UserDto.toDomainModel(): User = User(
-    id = id,
-    username = username,
-    email = email,
-    firstName = firstName,
-    lastName = lastName,
-    profileImageUrl = profileImageUrl,
-    role = role,
-    studentId = studentId,
-    department = department,
-    biometricEnabled = false // This is local-only
-)
+fun UserDto.toModel(): User {
+    return User(
+        id = id,
+        username = username,
+        email = email,
+        firstName = firstName,
+        lastName = lastName,
+        profileImageUrl = profileImageUrl,
+        role = role,
+        studentId = studentId,
+        department = department
+    )
+}
 
-fun User.toDto(): UserDto = UserDto(
-    id = id,
-    username = username,
-    email = email,
-    firstName = firstName,
-    lastName = lastName,
-    profileImageUrl = profileImageUrl,
-    role = role,
-    studentId = studentId,
-    department = department
-)
+fun CourseDto.toModel(): Course {
+    return Course(
+        id = id,
+        code = code,
+        name = name,
+        description = description,
+        instructorId = instructorId,
+        semester = semester,
+        year = year
+    )
+}
 
-// Course conversions
-fun CourseDto.toDomainModel(): Course = Course(
-    id = id,
-    code = code,
-    name = name,
-    description = description,
-    instructorId = instructorId,
-    semester = semester,
-    year = year
-)
+fun SessionDto.toModel(): Session {
+    return Session(
+        id = id,
+        courseId = courseId,
+        title = title,
+        scheduledDate = scheduledDate,
+        startTime = startTime,
+        endTime = endTime,
+        qrCode = qrCode,
+        isActive = isActive
+    )
+}
 
-fun Course.toDto(): CourseDto = CourseDto(
-    id = id,
-    code = code,
-    name = name,
-    description = description,
-    instructorId = instructorId,
-    semester = semester,
-    year = year
-)
+fun AttendanceRecordDto.toModel(): AttendanceRecord {
+    return AttendanceRecord(
+        id = id,
+        sessionId = sessionId,
+        studentId = studentId,
+        checkedInAt = checkedInAt,
+        status = status
+    )
+}
 
-fun Course.toCreateRequest(): CreateCourseRequest = CreateCourseRequest(
-    code = code,
-    name = name,
-    description = description,
-    instructorId = instructorId,
-    semester = semester,
-    year = year
-)
+fun EnrollmentDto.toModel(): Enrollment {
+    return Enrollment(
+        id = id,
+        courseId = courseId,
+        studentId = studentId
+    )
+}
 
-// Session conversions
-fun SessionDto.toDomainModel(): Session = Session(
-    id = id,
-    courseId = courseId,
-    title = title,
-    scheduledDate = scheduledDate,
-    startTime = startTime,
-    endTime = endTime,
-    qrCode = qrCode,
-    isActive = isActive
-)
+fun UserDto.toDomainModel(): User = toModel()
 
-fun Session.toDto(): SessionDto = SessionDto(
-    id = id,
-    courseId = courseId,
-    title = title,
-    scheduledDate = scheduledDate,
-    startTime = startTime,
-    endTime = endTime,
-    qrCode = qrCode,
-    isActive = isActive
-)
+fun CourseDto.toDomainModel(): Course = toModel()
 
-fun Session.toCreateRequest(): CreateSessionRequest = CreateSessionRequest(
-    courseId = courseId,
-    title = title,
-    scheduledDate = scheduledDate,
-    startTime = startTime,
-    endTime = endTime
-)
+fun SessionDto.toDomainModel(): Session = toModel()
 
-// Attendance conversions
-fun AttendanceRecordDto.toDomainModel(): AttendanceRecord = AttendanceRecord(
-    id = id,
-    sessionId = sessionId,
-    studentId = studentId,
-    checkedInAt = checkedInAt,
-    status = status
-)
+fun AttendanceRecordDto.toDomainModel(): AttendanceRecord = toModel()
 
-fun AttendanceRecord.toDto(): AttendanceRecordDto = AttendanceRecordDto(
-    id = id,
-    sessionId = sessionId,
-    studentId = studentId,
-    checkedInAt = checkedInAt,
-    status = status
-)
+fun EnrollmentDto.toDomainModel(): Enrollment = toModel()
 
-// Enrollment conversions
-fun EnrollmentDto.toDomainModel(): Enrollment = Enrollment(
-    id = id,
-    courseId = courseId,
-    studentId = studentId
-)
+// Mappers from domain models to DTOs
+fun Course.toCreateRequest(): CreateCourseRequest {
+    return CreateCourseRequest(
+        code = code,
+        name = name,
+        description = description,
+        instructorId = instructorId,
+        semester = semester,
+        year = year
+    )
+}
 
-fun Enrollment.toDto(): EnrollmentDto = EnrollmentDto(
-    id = id,
-    courseId = courseId,
-    studentId = studentId
-)
+fun Session.toCreateRequest(): CreateSessionRequest {
+    return CreateSessionRequest(
+        courseId = courseId,
+        title = title,
+        scheduledDate = scheduledDate,
+        startTime = startTime,
+        endTime = endTime
+    )
+}
 
-fun Enrollment.toCreateRequest(): CreateEnrollmentRequest = CreateEnrollmentRequest(
-    courseId = courseId,
-    studentId = studentId
-)
+// Mappers from domain models to DTOs for sync
+fun User.toDto(): UserDto {
+    return UserDto(
+        id = id,
+        username = username,
+        email = email,
+        firstName = firstName,
+        lastName = lastName,
+        profileImageUrl = profileImageUrl,
+        role = role,
+        studentId = studentId,
+        department = department
+    )
+}
+
+fun Course.toDto(): CourseDto {
+    return CourseDto(
+        id = id,
+        code = code,
+        name = name,
+        description = description,
+        instructorId = instructorId,
+        semester = semester,
+        year = year
+    )
+}
+
+fun Session.toDto(): SessionDto {
+    return SessionDto(
+        id = id,
+        courseId = courseId,
+        title = title,
+        scheduledDate = scheduledDate,
+        startTime = startTime,
+        endTime = endTime,
+        qrCode = qrCode,
+        isActive = isActive
+    )
+}
+
+fun Enrollment.toDto(): EnrollmentDto {
+    return EnrollmentDto(
+        id = id,
+        courseId = courseId,
+        studentId = studentId
+    )
+}
+
+fun AttendanceRecord.toDto(): AttendanceRecordDto {
+    return AttendanceRecordDto(
+        id = id,
+        sessionId = sessionId,
+        studentId = studentId,
+        checkedInAt = checkedInAt,
+        status = status
+    )
+}

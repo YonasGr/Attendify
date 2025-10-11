@@ -6,182 +6,116 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.attendify.app.data.api.toDomainModel
 import com.attendify.app.data.local.dao.UserDao
 import com.attendify.app.data.model.User
 import com.attendify.app.data.model.toEntity
 import com.attendify.app.data.model.toModel
 import com.attendify.app.utils.Resource
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
-/**
- * Repository for managing authentication state with backend integration
- * Falls back to local database when offline
- */
 @Singleton
 class AuthRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val userDao: UserDao,
-    private val networkRepository: NetworkRepository
+    private val networkRepository: NetworkRepository,
+    private val applicationScope: CoroutineScope
 ) {
     private val dataStore = context.dataStore
-    
+
     companion object {
         private val CURRENT_USER_ID_KEY = stringPreferencesKey("current_user_id")
         private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
     }
-    
-    /**
-     * Authenticate user with username and password
-     * Tries backend first, falls back to local database if offline
-     */
-    suspend fun login(username: String, password: String): Result<User> {
-        return try {
-            // Try backend login first
-            var backendResult: User? = null
-            networkRepository.login(username, password).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        resource.data?.let { loginData ->
-                            // Save token
-                            saveAuthToken(loginData.token)
-                            // Convert user and save locally
-                            val user = loginData.user.toDomainModel()
-                            userDao.insertUser(user.toEntity())
-                            saveCurrentUserId(user.id)
-                            backendResult = user
-                        }
-                    }
-                    is Resource.Error -> {
-                        // Backend failed, try local database
-                        val userEntity = userDao.getUserByUsername(username)
-                        if (userEntity != null && userEntity.password == password) {
-                            saveCurrentUserId(userEntity.id)
-                            backendResult = userEntity.toModel()
-                        }
-                    }
-                    is Resource.Loading -> { /* Loading state */ }
-                }
-            }
-            
-            backendResult?.let { 
-                Result.success(it) 
-            } ?: Result.failure(Exception("Invalid username or password"))
-            
-        } catch (e: Exception) {
-            // On any error, try local database
-            try {
-                val userEntity = userDao.getUserByUsername(username)
-                if (userEntity != null && userEntity.password == password) {
-                    saveCurrentUserId(userEntity.id)
-                    Result.success(userEntity.toModel())
-                } else {
-                    Result.failure(Exception("Invalid username or password"))
-                }
-            } catch (localError: Exception) {
-                Result.failure(localError)
-            }
+
+    val authState: StateFlow<Resource<User?>> = dataStore.data
+        .map { preferences ->
+            preferences[CURRENT_USER_ID_KEY]
         }
-    }
-    
-    /**
-     * Save authentication token
-     */
-    private suspend fun saveAuthToken(token: String) {
-        dataStore.edit { preferences ->
-            preferences[AUTH_TOKEN_KEY] = token
-        }
-    }
-    
-    /**
-     * Get authentication token
-     */
-    suspend fun getAuthToken(): String? {
-        return dataStore.data.map { preferences ->
-            preferences[AUTH_TOKEN_KEY]
-        }.first()
-    }
-    
-    /**
-     * Save current user ID
-     */
-    private suspend fun saveCurrentUserId(userId: String) {
-        dataStore.edit { preferences ->
-            preferences[CURRENT_USER_ID_KEY] = userId
-        }
-    }
-    
-    /**
-     * Get current user ID
-     */
-    fun getCurrentUserId(): Flow<String?> = dataStore.data.map { preferences ->
-        preferences[CURRENT_USER_ID_KEY]
-    }
-    
-    /**
-     * Get current user
-     */
-    suspend fun getCurrentUser(): User? {
-        val userId = getCurrentUserId().first()
-        return if (userId != null) {
-            userDao.getUserById(userId).first()?.toModel()
-        } else {
-            null
-        }
-    }
-    
-    /**
-     * Get current user as Flow
-     */
-    fun getCurrentUserFlow(): Flow<User?> {
-        return dataStore.data.map { preferences ->
-            val userId = preferences[CURRENT_USER_ID_KEY]
-            if (userId != null) {
-                userDao.getUserById(userId).first()?.toModel()
+        .distinctUntilChanged()
+        .flatMapLatest { userId ->
+            if (userId == null) {
+                flowOf<Resource<User?>>(Resource.Success(null))
             } else {
-                null
+                userDao.getUserById(userId).map { entity ->
+                    Resource.Success(entity?.toModel()) as Resource<User?>
+                }
             }
         }
+        .catch { e ->
+            emit(Resource.Error("Failed to load auth state: ${e.message}"))
+        }
+        .stateIn(applicationScope, SharingStarted.Eagerly, Resource.Loading())
+
+    suspend fun login(username: String, password: String): Result<User> = withContext(Dispatchers.IO) {
+        try {
+            when (val resource = networkRepository.login(username, password).first { it !is Resource.Loading }) {
+                is Resource.Success -> {
+                    resource.data?.let {
+                        saveAuthToken(it.token)
+                        val user = it.user.toDomainModel()
+                        userDao.insertUser(user.toEntity())
+                        saveCurrentUserId(user.id)
+                        Result.success(user)
+                    } ?: Result.failure(Exception("Login failed: Empty response from server."))
+                }
+                is Resource.Error -> loginFromLocal(username, password)
+                else -> Result.failure(Exception("Login failed: Unexpected state."))
+            }
+        } catch (e: Exception) {
+            loginFromLocal(username, password)
+        }
     }
-    
-    /**
-     * Clear all authentication data (logout)
-     */
+
+    private suspend fun loginFromLocal(username: String, password: String): Result<User> {
+        return try {
+            val userEntity = userDao.getUserByUsername(username)
+            if (userEntity != null && userEntity.password == password) {
+                saveCurrentUserId(userEntity.id)
+                Result.success(userEntity.toModel())
+            } else {
+                Result.failure(Exception("Invalid username or password."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun logout() {
-        dataStore.edit { preferences ->
-            preferences.clear()
+        withContext(Dispatchers.IO) {
+            dataStore.edit { it.clear() }
         }
     }
-    
-    /**
-     * Check if user is authenticated
-     */
-    fun isAuthenticated(): Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[CURRENT_USER_ID_KEY] != null
+
+    private suspend fun saveAuthToken(token: String) {
+        dataStore.edit { it[AUTH_TOKEN_KEY] = token }
     }
-    
-    /**
-     * Enable or disable biometric authentication for current user
-     */
+
+    private suspend fun saveCurrentUserId(userId: String) {
+        dataStore.edit { it[CURRENT_USER_ID_KEY] = userId }
+    }
+
+    suspend fun getCurrentUser(): User? {
+        return (authState.first() as? Resource.Success)?.data
+    }
+
+    fun getCurrentUserFlow(): Flow<User?> {
+        return authState.map { (it as? Resource.Success)?.data }
+    }
+
     suspend fun setBiometricEnabled(enabled: Boolean) {
-        val userId = getCurrentUserId().first()
-        if (userId != null) {
-            userDao.updateBiometricEnabled(userId, enabled)
+        withContext(Dispatchers.IO) {
+            getCurrentUser()?.let { user ->
+                userDao.updateUser(user.toEntity().copy(biometricEnabled = enabled))
+            }
         }
-    }
-    
-    /**
-     * Check if biometric is enabled for current user
-     */
-    suspend fun isBiometricEnabledForUser(): Boolean {
-        val user = getCurrentUser()
-        return user?.biometricEnabled ?: false
     }
 }

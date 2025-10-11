@@ -5,14 +5,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.attendify.app.utils.Resource
 import java.util.Calendar
 
 /**
@@ -29,30 +29,28 @@ fun CreateCourseScreen(
     var courseDescription by remember { mutableStateOf("") }
     var selectedSemester by remember { mutableStateOf("Fall") }
     var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR).toString()) }
-    
-    val isLoading by viewModel.isLoading.collectAsState()
-    val successMessage by viewModel.successMessage.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is Resource.Loading
+
     // Navigate back on success
-    LaunchedEffect(successMessage) {
-        successMessage?.let {
-            kotlinx.coroutines.delay(1000)
-            viewModel.clearSuccessMessage()
+    LaunchedEffect(uiState) {
+        if (uiState is Resource.Success) {
+            kotlinx.coroutines.delay(1500) // Show message before navigating back
             onNavigateBack()
         }
     }
-    
+
     val semesters = listOf("Fall", "Spring", "Summer", "Winter")
     var expandedSemester by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Create Course") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -75,7 +73,7 @@ fun CreateCourseScreen(
                 text = "Course Information",
                 style = MaterialTheme.typography.titleLarge
             )
-            
+
             OutlinedTextField(
                 value = courseCode,
                 onValueChange = { courseCode = it },
@@ -84,7 +82,7 @@ fun CreateCourseScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
+
             OutlinedTextField(
                 value = courseName,
                 onValueChange = { courseName = it },
@@ -93,7 +91,7 @@ fun CreateCourseScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
+
             OutlinedTextField(
                 value = courseDescription,
                 onValueChange = { courseDescription = it },
@@ -103,7 +101,7 @@ fun CreateCourseScreen(
                 minLines = 3,
                 maxLines = 5
             )
-            
+
             ExposedDropdownMenuBox(
                 expanded = expandedSemester,
                 onExpandedChange = { expandedSemester = it }
@@ -133,7 +131,7 @@ fun CreateCourseScreen(
                     }
                 }
             }
-            
+
             OutlinedTextField(
                 value = year,
                 onValueChange = { if (it.length <= 4) year = it },
@@ -143,48 +141,49 @@ fun CreateCourseScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
-            
-            errorMessage?.let { error ->
+
+            if (uiState is Resource.Error) {
+                val errorMessage = (uiState as Resource.Error<Unit>).message
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
                 ) {
                     Text(
-                        text = error,
+                        text = errorMessage ?: "An unknown error occurred",
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(16.dp)
                     )
                 }
             }
-            
-            successMessage?.let { success ->
+
+            if (uiState is Resource.Success) {
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
                 ) {
                     Text(
-                        text = success,
+                        text = "Course created successfully!",
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(16.dp)
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
+
             Button(
                 onClick = {
                     if (courseCode.isBlank() || courseName.isBlank() || year.isBlank()) {
                         return@Button
                     }
-                    
+
                     val yearInt = year.toIntOrNull()
                     if (yearInt == null) {
                         return@Button
                     }
-                    
+
                     viewModel.createCourse(
                         code = courseCode.trim(),
                         name = courseName.trim(),
@@ -194,8 +193,8 @@ fun CreateCourseScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading && courseCode.isNotBlank() && 
-                         courseName.isNotBlank() && year.isNotBlank()
+                enabled = !isLoading && courseCode.isNotBlank() &&
+                        courseName.isNotBlank() && year.isNotBlank()
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(

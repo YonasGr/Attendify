@@ -155,3 +155,11 @@ data class SyncStatusResponse(
     @SerializedName("lastSyncTime") val lastSyncTime: Long?,
     @SerializedName("pendingChanges") val pendingChanges: Int
 )
+
+// Admin models
+data class SystemStats(
+    @SerializedName("userCount") val userCount: Int,
+    @SerializedName("courseCount") val courseCount: Int,
+    @SerializedName("sessionCount") val sessionCount: Int,
+    @SerializedName("attendanceCount") val attendanceCount: Int
+)

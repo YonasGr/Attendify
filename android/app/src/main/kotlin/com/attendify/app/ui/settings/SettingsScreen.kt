@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,19 +30,19 @@ fun SettingsScreen(
     val context = LocalContext.current
     val biometricAuthManager = remember { BiometricAuthManager(context) }
     val isBiometricAvailable = remember { biometricAuthManager.isBiometricAuthAvailable() }
-    
-    val currentUser by viewModel.currentUser.collectAsState()
+
+    val currentUser by viewModel.user.collectAsState()
     val settingsState by viewModel.settingsState.collectAsState()
-    
+
     var showBiometricDialog by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,7 +78,7 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Divider()
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -103,7 +104,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            
+
             // Security section
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -121,7 +122,7 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Divider()
-                    
+
                     // Biometric authentication toggle
                     if (isBiometricAvailable) {
                         Row(
@@ -147,7 +148,7 @@ fun SettingsScreen(
                                     if (enabled) {
                                         showBiometricDialog = true
                                     } else {
-                                        viewModel.setBiometricEnabled(false)
+                                        viewModel.onBiometricAuthToggled(false)
                                     }
                                 }
                             )
@@ -180,7 +181,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            
+
             // Data Synchronization section
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -198,7 +199,7 @@ fun SettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Divider()
-                    
+
                     // Last sync time
                     val lastSyncTime by viewModel.lastSyncTime.collectAsState()
                     Row(
@@ -232,9 +233,9 @@ fun SettingsScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Sync button
                     Button(
                         onClick = { viewModel.syncData() },
@@ -255,7 +256,7 @@ fun SettingsScreen(
                             Text("Sync Now")
                         }
                     }
-                    
+
                     Text(
                         text = "Backend: attendify-mpsw.onrender.com",
                         style = MaterialTheme.typography.bodySmall,
@@ -263,7 +264,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            
+
             // Show success/error messages
             if (settingsState is SettingsState.Success) {
                 Card(
@@ -290,7 +291,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            
+
             if (settingsState is SettingsState.Error) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -318,19 +319,19 @@ fun SettingsScreen(
             }
         }
     }
-    
+
     // Biometric authentication dialog
     if (showBiometricDialog) {
         LaunchedEffect(Unit) {
             biometricAuthManager.showBiometricPrompt(
                 activity = context.findActivity(),
                 onSuccess = {
-                    viewModel.setBiometricEnabled(true)
+                    viewModel.onBiometricAuthToggled(true)
                     showBiometricDialog = false
                 },
-                onError = { _, _ ->
+                onError = { _, errorString ->
                     showBiometricDialog = false
-                    viewModel.setError("Failed to enable biometric authentication")
+                    viewModel.setError("Failed to enable biometric authentication: $errorString")
                 }
             )
         }

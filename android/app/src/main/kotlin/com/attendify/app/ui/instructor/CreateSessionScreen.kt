@@ -2,10 +2,12 @@ package com.attendify.app.ui.instructor
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,12 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.Course
+import com.attendify.app.utils.Resource
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * Create Session Screen for Instructors
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateSessionScreen(
@@ -28,24 +29,36 @@ fun CreateSessionScreen(
     onNavigateBack: () -> Unit,
     onSessionCreated: () -> Unit
 ) {
+    val courses by viewModel.courses.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is Resource.Loading
+
     var sessionTitle by remember { mutableStateOf("") }
     var selectedCourse by remember { mutableStateOf<Course?>(null) }
-    var selectedDate by remember { mutableStateOf<Long?>(null) }
+    var selectedDate by remember { mutableStateOf<Long?>(System.currentTimeMillis()) }
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
     var isActive by remember { mutableStateOf(true) }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showCourseSelector by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isCreating by remember { mutableStateOf(false) }
 
-    val courses by viewModel.courses.collectAsState()
-    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    var showCourseSelector by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    var validationError by remember { mutableStateOf<String?>(null) }
+    val errorMessage = validationError ?: (uiState as? Resource.Error<Unit>)?.message
+
+    val dateFormatter = remember { SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault()) }
+
+    LaunchedEffect(uiState) {
+        if (uiState is Resource.Success) {
+            delay(1500)
+            onSessionCreated()
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         "Create Session",
                         fontWeight = FontWeight.Bold
@@ -53,7 +66,7 @@ fun CreateSessionScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -107,7 +120,7 @@ fun CreateSessionScreen(
                 leadingIcon = {
                     Icon(Icons.Default.Title, "Title")
                 },
-                enabled = !isCreating,
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -115,7 +128,7 @@ fun CreateSessionScreen(
             OutlinedButton(
                 onClick = { showCourseSelector = true },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isCreating,
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.School, contentDescription = null)
@@ -131,7 +144,7 @@ fun CreateSessionScreen(
             OutlinedButton(
                 onClick = { showDatePicker = true },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isCreating,
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.CalendarToday, contentDescription = null)
@@ -158,7 +171,7 @@ fun CreateSessionScreen(
                     leadingIcon = {
                         Icon(Icons.Default.AccessTime, "Start")
                     },
-                    enabled = !isCreating,
+                    enabled = !isLoading,
                     shape = RoundedCornerShape(12.dp)
                 )
 
@@ -172,7 +185,7 @@ fun CreateSessionScreen(
                     leadingIcon = {
                         Icon(Icons.Default.AccessTime, "End")
                     },
-                    enabled = !isCreating,
+                    enabled = !isLoading,
                     shape = RoundedCornerShape(12.dp)
                 )
             }
@@ -205,7 +218,7 @@ fun CreateSessionScreen(
                     Switch(
                         checked = isActive,
                         onCheckedChange = { isActive = it },
-                        enabled = !isCreating
+                        enabled = !isLoading
                     )
                 }
             }
@@ -228,7 +241,7 @@ fun CreateSessionScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = errorMessage!!,
+                            text = errorMessage,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodyMedium
                         )
@@ -242,42 +255,36 @@ fun CreateSessionScreen(
             Button(
                 onClick = {
                     // Validate inputs
-                    when {
-                        sessionTitle.isBlank() -> errorMessage = "Please enter a session title"
-                        selectedCourse == null -> errorMessage = "Please select a course"
-                        selectedDate == null -> errorMessage = "Please select a date"
-                        startTime.isBlank() -> errorMessage = "Please enter start time"
-                        endTime.isBlank() -> errorMessage = "Please enter end time"
-                        !isValidTimeFormat(startTime) -> errorMessage = "Invalid start time format (use HH:mm)"
-                        !isValidTimeFormat(endTime) -> errorMessage = "Invalid end time format (use HH:mm)"
-                        else -> {
-                            errorMessage = null
-                            isCreating = true
-                            viewModel.createSession(
-                                courseId = selectedCourse!!.id,
-                                title = sessionTitle,
-                                scheduledDate = selectedDate!!,
-                                startTime = startTime,
-                                endTime = endTime,
-                                isActive = isActive,
-                                onSuccess = {
-                                    onSessionCreated()
-                                },
-                                onError = { error ->
-                                    errorMessage = error
-                                    isCreating = false
-                                }
-                            )
-                        }
+                    val error = when {
+                        sessionTitle.isBlank() -> "Please enter a session title"
+                        selectedCourse == null -> "Please select a course"
+                        selectedDate == null -> "Please select a date"
+                        startTime.isBlank() -> "Please enter start time"
+                        endTime.isBlank() -> "Please enter end time"
+                        !isValidTimeFormat(startTime) -> "Invalid start time format (use HH:mm)"
+                        !isValidTimeFormat(endTime) -> "Invalid end time format (use HH:mm)"
+                        else -> null
+                    }
+                    validationError = error
+
+                    if (error == null) {
+                        viewModel.createSession(
+                            courseId = selectedCourse!!.id,
+                            title = sessionTitle,
+                            scheduledDate = selectedDate!!,
+                            startTime = startTime,
+                            endTime = endTime,
+                            isActive = isActive
+                        )
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !isCreating,
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {
-                if (isCreating) {
+                if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -299,7 +306,7 @@ fun CreateSessionScreen(
             OutlinedButton(
                 onClick = onNavigateBack,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isCreating,
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Cancel")
@@ -312,11 +319,11 @@ fun CreateSessionScreen(
                 onDismissRequest = { showCourseSelector = false },
                 title = { Text("Select Course") },
                 text = {
-                    Column(
+                    LazyColumn(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        courses.forEach { course ->
+                        items(courses) { course ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 onClick = {

@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.AttendanceRecord
+import com.attendify.app.utils.Resource
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,15 +30,16 @@ fun AttendanceHistoryScreen(
     onNavigateBack: () -> Unit
 ) {
     val attendanceRecords by viewModel.attendanceRecords.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is Resource.Loading
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Attendance History") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -75,7 +77,7 @@ fun AttendanceHistoryScreen(
                             lateCount = attendanceRecords.count { it.status == "late" },
                             modifier = Modifier.padding(16.dp)
                         )
-                        
+
                         // Records List
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -176,13 +178,13 @@ private fun AttendanceRecordCard(record: AttendanceRecord) {
         "late" -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.error
     }
-    
+
     val statusIcon = when (record.status.lowercase()) {
         "present" -> Icons.Default.CheckCircle
         "late" -> Icons.Default.Schedule
         else -> Icons.Default.Cancel
     }
-    
+
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {

@@ -123,6 +123,10 @@ interface AttendifyApiService {
     @DELETE("attendance/{id}")
     suspend fun deleteAttendance(@Path("id") id: String): Response<ApiResponse<Unit>>
     
+    // Admin
+    @GET("admin/stats")
+    suspend fun getSystemStats(): Response<ApiResponse<SystemStats>>
+    
     // Sync
     @POST("sync/upload")
     suspend fun syncUpload(@Body data: SyncUploadRequest): Response<ApiResponse<String>>

@@ -10,38 +10,75 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Repository for handling network operations with the backend API
- * Provides offline-first architecture with proper error handling
+ * Repository for handling network operations with the backend API.
+ * Provides a streamlined and robust approach to data fetching and error handling.
  */
 @Singleton
 class NetworkRepository @Inject constructor(
     private val api: AttendifyApiService
 ) {
-    
+
     /**
-     * Generic function to handle API responses
+     * Generic function to safely execute API calls and handle responses for single items.
      */
-    private fun <T> handleResponse(response: Response<T>): Resource<T> {
-        return if (response.isSuccessful) {
-            response.body()?.let {
-                Resource.Success(it)
-            } ?: Resource.Error("Empty response body")
-        } else {
-            Resource.Error("Error ${response.code()}: ${response.message()}")
+    private inline fun <DTO, Domain> safeApiCall(
+        crossinline transform: (DTO) -> Domain,
+        crossinline apiCall: suspend () -> Response<ApiResponse<DTO>>
+    ): Flow<Resource<Domain>> = flow {
+        emit(Resource.Loading())
+        try {
+            val response = apiCall()
+            if (response.isSuccessful) {
+                response.body()?.data?.let {
+                    emit(Resource.Success(transform(it)))
+                } ?: emit(Resource.Error(response.body()?.message ?: "Empty data"))
+            } else {
+                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Network error"))
         }
     }
-    
+
+    /**
+     * Generic function to safely execute API calls and handle responses for lists.
+     */
+    private inline fun <DTO, Domain> safeApiCallForList(
+        crossinline transform: (DTO) -> Domain,
+        crossinline apiCall: suspend () -> Response<ApiResponse<List<DTO>>>
+    ): Flow<Resource<List<Domain>>> = flow {
+        emit(Resource.Loading())
+        try {
+            val response = apiCall()
+            if (response.isSuccessful) {
+                response.body()?.data?.let {
+                    emit(Resource.Success(it.map(transform)))
+                } ?: emit(Resource.Error(response.body()?.message ?: "Empty data"))
+            } else {
+                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Network error"))
+        }
+    }
+
     // Health Check
     fun checkHealth(): Flow<Resource<HealthResponse>> = flow {
         emit(Resource.Loading())
         try {
             val response = api.health()
-            emit(handleResponse(response))
+            if (response.isSuccessful) {
+                response.body()?.let {
+                    emit(Resource.Success(it))
+                } ?: emit(Resource.Error("Empty response body"))
+            } else {
+                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
+            }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to check server health"))
         }
     }
-    
+
     // Authentication
     fun login(username: String, password: String): Flow<Resource<LoginData>> = flow {
         emit(Resource.Loading())
@@ -57,13 +94,13 @@ class NetworkRepository @Inject constructor(
                     }
                 } ?: emit(Resource.Error("Empty response"))
             } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
+                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Network error during login"))
         }
     }
-    
+
     fun register(
         username: String,
         password: String,
@@ -89,248 +126,80 @@ class NetworkRepository @Inject constructor(
                     }
                 } ?: emit(Resource.Error("Empty response"))
             } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
+                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Network error during registration"))
         }
     }
-    
+
     // Users
-    fun getAllUsers(): Flow<Resource<List<User>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getAllUsers()
-            if (response.isSuccessful) {
-                response.body()?.data?.let { users ->
-                    emit(Resource.Success(users.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No users data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch users"))
-        }
+    fun getAllUsers(): Flow<Resource<List<User>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getAllUsers()
     }
-    
-    fun getUserById(id: String): Flow<Resource<User>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getUserById(id)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { user ->
-                    emit(Resource.Success(user.toDomainModel()))
-                } ?: emit(Resource.Error("User not found"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch user"))
-        }
+
+    fun getUserById(id: String): Flow<Resource<User>> = safeApiCall({ it.toDomainModel() }) {
+        api.getUserById(id)
     }
-    
+
     // Courses
-    fun getAllCourses(): Flow<Resource<List<Course>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getAllCourses()
-            if (response.isSuccessful) {
-                response.body()?.data?.let { courses ->
-                    emit(Resource.Success(courses.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No courses data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch courses"))
-        }
+    fun getAllCourses(): Flow<Resource<List<Course>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getAllCourses()
     }
-    
-    fun getCoursesByInstructor(instructorId: String): Flow<Resource<List<Course>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getCoursesByInstructor(instructorId)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { courses ->
-                    emit(Resource.Success(courses.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No courses data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch courses"))
-        }
+
+    fun getCoursesByInstructor(instructorId: String): Flow<Resource<List<Course>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getCoursesByInstructor(instructorId)
     }
-    
-    fun getCoursesByStudent(studentId: String): Flow<Resource<List<Course>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getCoursesByStudent(studentId)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { courses ->
-                    emit(Resource.Success(courses.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No courses data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch courses"))
-        }
+
+    fun getCoursesByStudent(studentId: String): Flow<Resource<List<Course>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getCoursesByStudent(studentId)
     }
-    
-    fun createCourse(course: Course): Flow<Resource<Course>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.createCourse(course.toCreateRequest())
-            if (response.isSuccessful) {
-                response.body()?.data?.let { createdCourse ->
-                    emit(Resource.Success(createdCourse.toDomainModel()))
-                } ?: emit(Resource.Error("Failed to create course"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to create course"))
-        }
+
+    fun createCourse(course: Course): Flow<Resource<Course>> = safeApiCall({ it.toDomainModel() }) {
+        api.createCourse(course.toCreateRequest())
     }
-    
+
     // Sessions
-    fun getAllSessions(): Flow<Resource<List<Session>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getAllSessions()
-            if (response.isSuccessful) {
-                response.body()?.data?.let { sessions ->
-                    emit(Resource.Success(sessions.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No sessions data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch sessions"))
-        }
+    fun getAllSessions(): Flow<Resource<List<Session>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getAllSessions()
     }
-    
-    fun getSessionsByCourse(courseId: String): Flow<Resource<List<Session>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getSessionsByCourse(courseId)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { sessions ->
-                    emit(Resource.Success(sessions.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No sessions data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch sessions"))
-        }
+
+    fun getSessionsByCourse(courseId: String): Flow<Resource<List<Session>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getSessionsByCourse(courseId)
     }
-    
-    fun createSession(session: Session): Flow<Resource<Session>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.createSession(session.toCreateRequest())
-            if (response.isSuccessful) {
-                response.body()?.data?.let { createdSession ->
-                    emit(Resource.Success(createdSession.toDomainModel()))
-                } ?: emit(Resource.Error("Failed to create session"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to create session"))
-        }
+
+    fun createSession(session: Session): Flow<Resource<Session>> = safeApiCall({ it.toDomainModel() }) {
+        api.createSession(session.toCreateRequest())
     }
-    
+
     // Attendance
-    fun getAttendanceBySession(sessionId: String): Flow<Resource<List<AttendanceRecord>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getAttendanceBySession(sessionId)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { attendance ->
-                    emit(Resource.Success(attendance.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No attendance data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch attendance"))
-        }
+    fun getAttendanceBySession(sessionId: String): Flow<Resource<List<AttendanceRecord>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getAttendanceBySession(sessionId)
     }
-    
-    fun getAttendanceByStudent(studentId: String): Flow<Resource<List<AttendanceRecord>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getAttendanceByStudent(studentId)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { attendance ->
-                    emit(Resource.Success(attendance.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No attendance data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch attendance"))
-        }
+
+    fun getAttendanceByStudent(studentId: String): Flow<Resource<List<AttendanceRecord>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getAttendanceByStudent(studentId)
     }
-    
+
     fun markAttendance(
         sessionId: String,
         studentId: String,
         qrCode: String?
-    ): Flow<Resource<AttendanceRecord>> = flow {
-        emit(Resource.Loading())
-        try {
-            val request = MarkAttendanceRequest(sessionId, studentId, qrCode)
-            val response = api.markAttendance(request)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { attendance ->
-                    emit(Resource.Success(attendance.toDomainModel()))
-                } ?: emit(Resource.Error("Failed to mark attendance"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to mark attendance"))
-        }
+    ): Flow<Resource<AttendanceRecord>> = safeApiCall({ it.toDomainModel() }) {
+        val request = MarkAttendanceRequest(sessionId, studentId, qrCode)
+        api.markAttendance(request)
     }
-    
+
     // Enrollments
-    fun getEnrollmentsByStudent(studentId: String): Flow<Resource<List<Enrollment>>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.getEnrollmentsByStudent(studentId)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { enrollments ->
-                    emit(Resource.Success(enrollments.map { it.toDomainModel() }))
-                } ?: emit(Resource.Error("No enrollments data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to fetch enrollments"))
-        }
+    fun getEnrollmentsByStudent(studentId: String): Flow<Resource<List<Enrollment>>> = safeApiCallForList({ it.toDomainModel() }) {
+        api.getEnrollmentsByStudent(studentId)
     }
-    
-    fun createEnrollment(courseId: String, studentId: String): Flow<Resource<Enrollment>> = flow {
-        emit(Resource.Loading())
-        try {
-            val request = CreateEnrollmentRequest(courseId, studentId)
-            val response = api.createEnrollment(request)
-            if (response.isSuccessful) {
-                response.body()?.data?.let { enrollment ->
-                    emit(Resource.Success(enrollment.toDomainModel()))
-                } ?: emit(Resource.Error("Failed to create enrollment"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to create enrollment"))
-        }
+
+    fun createEnrollment(courseId: String, studentId: String): Flow<Resource<Enrollment>> = safeApiCall({ it.toDomainModel() }) {
+        val request = CreateEnrollmentRequest(courseId, studentId)
+        api.createEnrollment(request)
     }
-    
+
     // Sync operations
     fun syncUpload(
         users: List<User>?,
@@ -350,30 +219,18 @@ class NetworkRepository @Inject constructor(
             )
             val response = api.syncUpload(request)
             if (response.isSuccessful) {
-                response.body()?.data?.let { result ->
-                    emit(Resource.Success(result))
+                response.body()?.data?.let {
+                    emit(Resource.Success(it))
                 } ?: emit(Resource.Error("Sync upload failed"))
             } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
+                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Failed to upload data"))
         }
     }
-    
-    fun syncDownload(): Flow<Resource<SyncDownloadResponse>> = flow {
-        emit(Resource.Loading())
-        try {
-            val response = api.syncDownload()
-            if (response.isSuccessful) {
-                response.body()?.data?.let { data ->
-                    emit(Resource.Success(data))
-                } ?: emit(Resource.Error("No sync data"))
-            } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Failed to download data"))
-        }
+
+    fun syncDownload(): Flow<Resource<SyncDownloadResponse>> = safeApiCall({ it }) {
+        api.syncDownload()
     }
 }

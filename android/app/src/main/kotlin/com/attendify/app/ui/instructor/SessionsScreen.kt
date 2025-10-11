@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.attendify.app.data.model.Session
+import com.attendify.app.utils.Resource
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,15 +31,16 @@ fun SessionsScreen(
     onCreateSession: () -> Unit
 ) {
     val sessions by viewModel.sessions.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is Resource.Loading
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Sessions") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -169,7 +172,7 @@ private fun SessionCard(
             }
             
             Icon(
-                Icons.Default.ChevronRight,
+                Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "View details",
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )

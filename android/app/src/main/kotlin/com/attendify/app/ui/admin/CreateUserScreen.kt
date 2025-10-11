@@ -5,7 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,10 +13,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.attendify.app.utils.Resource
 
-/**
- * Create User Screen for Admins
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateUserScreen(
@@ -31,37 +29,29 @@ fun CreateUserScreen(
     var selectedRole by remember { mutableStateOf("student") }
     var studentId by remember { mutableStateOf("") }
     var department by remember { mutableStateOf("") }
-    
-    val isLoading by viewModel.isLoading.collectAsState()
-    val successMessage by viewModel.successMessage.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    
-    // Navigate back on success
-    LaunchedEffect(successMessage) {
-        successMessage?.let {
-            kotlinx.coroutines.delay(1000)
-            viewModel.clearSuccessMessage()
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isLoading = uiState is Resource.Loading
+
+    LaunchedEffect(uiState) {
+        if (uiState is Resource.Success) {
+            kotlinx.coroutines.delay(1500)
             onNavigateBack()
         }
     }
-    
+
     val roles = listOf("student", "instructor", "admin")
     var expandedRole by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Create User") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -73,40 +63,34 @@ fun CreateUserScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "User Information",
-                style = MaterialTheme.typography.titleLarge
-            )
-            
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Username *") },
-                placeholder = { Text("Username for login") },
+                label = { Text("Username") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                isError = username.isBlank()
             )
-            
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password *") },
-                placeholder = { Text("Minimum 6 characters") },
+                label = { Text("Password") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                isError = password.length < 6
             )
-            
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
-                placeholder = { Text("user@example.com") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
-            
+
             OutlinedTextField(
                 value = firstName,
                 onValueChange = { firstName = it },
@@ -114,7 +98,7 @@ fun CreateUserScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
+
             OutlinedTextField(
                 value = lastName,
                 onValueChange = { lastName = it },
@@ -122,20 +106,18 @@ fun CreateUserScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-            
+
             ExposedDropdownMenuBox(
                 expanded = expandedRole,
-                onExpandedChange = { expandedRole = it }
+                onExpandedChange = { expandedRole = !expandedRole }
             ) {
                 OutlinedTextField(
                     value = selectedRole.replaceFirstChar { it.uppercase() },
                     onValueChange = { },
                     readOnly = true,
-                    label = { Text("Role *") },
+                    label = { Text("Role") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedRole) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
                 )
                 ExposedDropdownMenu(
                     expanded = expandedRole,
@@ -152,69 +134,36 @@ fun CreateUserScreen(
                     }
                 }
             }
-            
+
             if (selectedRole == "student") {
                 OutlinedTextField(
                     value = studentId,
                     onValueChange = { studentId = it },
                     label = { Text("Student ID") },
-                    placeholder = { Text("e.g., STU001") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
             }
-            
+
             if (selectedRole == "student" || selectedRole == "instructor") {
                 OutlinedTextField(
                     value = department,
                     onValueChange = { department = it },
                     label = { Text("Department") },
-                    placeholder = { Text("e.g., Computer Science") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
             }
-            
-            errorMessage?.let { error ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+
+            if (uiState is Resource.Error) {
+                Text(
+                    text = (uiState as Resource.Error<Unit>).message ?: "An unknown error occurred",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
-            
-            successMessage?.let { success ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text(
-                        text = success,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
+
             Button(
                 onClick = {
-                    if (username.isBlank() || password.isBlank()) {
-                        return@Button
-                    }
-                    
-                    if (password.length < 6) {
-                        return@Button
-                    }
-                    
                     viewModel.createUser(
                         username = username.trim(),
                         password = password,
@@ -227,14 +176,10 @@ fun CreateUserScreen(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading && username.isNotBlank() && 
-                         password.isNotBlank() && password.length >= 6
+                enabled = !isLoading && username.isNotBlank() && password.length >= 6
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else {
                     Text("Create User")
                 }
