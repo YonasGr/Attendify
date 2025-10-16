@@ -380,31 +380,81 @@ cd android
 
 ### Running the REST API Server
 
+#### Quick Start (Local Development)
+
 **Prerequisites:**
 - Node.js v16 or higher
 - PostgreSQL database
 
-**Installation:**
+**Setup:**
 ```bash
 cd server
+
+# Install dependencies
 npm install
-```
 
-**Configuration:**
-```bash
+# Copy environment configuration
 cp .env.example .env
-# Edit .env with your database URL and JWT secret
-```
 
-**Development:**
-```bash
+# Edit .env with your local database credentials
+# For local PostgreSQL, use:
+# DB_USER=postgres
+# DB_PASSWORD=password
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_DATABASE=attendify
+
+# Initialize database with tables and seed data (Recommended)
+chmod +x init-db.sh
+./init-db.sh
+
+# Start the development server
 npm run dev
 ```
 
-**Production:**
+The server will be available at `http://localhost:3000`.
+
+**Test Accounts (after seeding):**
+- Admin: `admin` / `password123`
+- Instructor: `instructor` / `password123`
+- Student: `student` / `password123`
+
+#### Local PostgreSQL Setup (Arch Linux)
+
 ```bash
-npm start
+# Install PostgreSQL
+sudo pacman -S postgresql
+
+# Initialize database
+sudo -u postgres initdb -D /var/lib/postgres/data
+
+# Start PostgreSQL
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Create database user and database
+sudo -u postgres createuser --interactive
+sudo -u postgres createdb attendify
+
+# Optional: Install pgAdmin 4 for GUI management
+sudo pacman -S pgadmin4
 ```
+
+**For detailed setup instructions on other systems and testing workflows, see [server/README.md](server/README.md).**
+
+#### Production Deployment
+
+The production backend is hosted at **https://attendify-mpsw.onrender.com**.
+
+To deploy your own instance:
+
+1. Create a PostgreSQL database on Render.com (or another provider)
+2. Set environment variables:
+   - `DATABASE_URL`: PostgreSQL connection string
+   - `JWT_SECRET`: Secret key for JWT tokens
+   - `NODE_ENV`: `production`
+3. Deploy the server code
+4. Run the seed script to populate initial data
 
 **See [server/README.md](server/README.md) for detailed server documentation.**
 

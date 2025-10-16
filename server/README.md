@@ -54,8 +54,18 @@ Edit `.env` with your configuration:
 NODE_ENV=development
 PORT=3000
 
-# Database Configuration (PostgreSQL on Render or similar)
-DATABASE_URL=postgresql://username:password@host:5432/attendify_db
+# Database Configuration
+# Choose ONE of the following options:
+
+# Option 1: Use DATABASE_URL (for Render, Heroku, or other cloud providers)
+# DATABASE_URL=postgresql://username:password@host:5432/attendify_db
+
+# Option 2: Use individual database variables (for local development)
+DB_USER=postgres
+DB_PASSWORD=password
+DB_HOST=localhost
+DB_PORT=5432
+DB_DATABASE=attendify
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
@@ -67,10 +77,124 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
 
 ### 3. Database Setup
 
-The server uses PostgreSQL. You can use:
-- **Local PostgreSQL**: Install and run PostgreSQL locally
-- **Render.com**: Create a free PostgreSQL database
-- **Other cloud providers**: Heroku, AWS RDS, Google Cloud SQL, etc.
+#### Option A: Automated Setup (Recommended)
+
+Use the initialization script to set up your local database with tables and sample data:
+
+```bash
+chmod +x init-db.sh
+./init-db.sh
+```
+
+This script will:
+1. Check if PostgreSQL is running
+2. Create the database if it doesn't exist
+3. Create all required tables
+4. Seed the database with sample data
+
+**Test accounts after seeding:**
+- Admin: `admin` / `password123`
+- Instructor: `instructor` / `password123`
+- Student: `student` / `password123`
+
+#### Option B: Manual Setup
+
+**Step 1: Install PostgreSQL**
+
+##### On Arch Linux:
+```bash
+# Install PostgreSQL
+sudo pacman -S postgresql
+
+# Initialize the database cluster
+sudo -u postgres initdb -D /var/lib/postgres/data
+
+# Start PostgreSQL service
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Create a user and database
+sudo -u postgres createuser --interactive
+# Choose name: postgres (or your preferred username)
+# Superuser: yes
+
+sudo -u postgres createdb attendify
+```
+
+##### On Ubuntu/Debian:
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+
+# Create database
+sudo -u postgres createdb attendify
+```
+
+##### On macOS:
+```bash
+brew install postgresql@14
+brew services start postgresql@14
+
+# Create database
+createdb attendify
+```
+
+**Step 2: Access pgAdmin 4 (Optional but recommended)**
+
+pgAdmin 4 provides a graphical interface for PostgreSQL management.
+
+##### On Arch Linux:
+```bash
+sudo pacman -S pgadmin4
+
+# Run pgAdmin 4
+pgadmin4
+```
+
+##### On Ubuntu/Debian:
+```bash
+# Install pgAdmin 4
+curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list'
+sudo apt update
+sudo apt install pgadmin4-desktop
+```
+
+##### On macOS:
+```bash
+brew install --cask pgadmin4
+```
+
+**Configure pgAdmin 4:**
+1. Open pgAdmin 4
+2. Right-click "Servers" → "Register" → "Server"
+3. General tab: Name = "Attendify Local"
+4. Connection tab:
+   - Host: localhost
+   - Port: 5432
+   - Database: attendify
+   - Username: postgres
+   - Password: (your PostgreSQL password)
+
+**Step 3: Seed the Database**
+
+```bash
+# Connect to your database
+psql -U postgres -d attendify
+
+# Or if using DATABASE_URL
+psql $DATABASE_URL
+
+# Run the seed script
+\i seed-data.sql
+```
+
+Alternatively, use psql directly:
+```bash
+psql -U postgres -d attendify -f seed-data.sql
+```
 
 ## Running the Server
 
@@ -368,7 +492,270 @@ Render will automatically deploy when you push to your main branch.
 
 ## Testing the API
 
-### Using curl
+### Local Testing Workflow
+
+After setting up your local database and seeding it with sample data, follow this testing workflow:
+
+#### 1. Start the Server
+
+```bash
+# Development mode with auto-reload
+npm run dev
+
+# Or production mode
+npm start
+```
+
+The server should start on `http://localhost:3000`.
+
+#### 2. Test Basic Endpoints
+
+**Health Check:**
+```bash
+curl http://localhost:3000/api/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "message": "Attendify API Server is running",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+#### 3. Test Authentication
+
+**Login as Admin:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "password123"
+  }'
+```
+
+**Login as Instructor:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "instructor",
+    "password": "password123"
+  }'
+```
+
+**Login as Student:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "student",
+    "password": "password123"
+  }'
+```
+
+Save the `token` from the response for subsequent requests.
+
+#### 4. Test User Management (Admin Only)
+
+**Get All Users:**
+```bash
+curl -X GET http://localhost:3000/api/users \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+
+**Create a New User:**
+```bash
+curl -X POST http://localhost:3000/api/users \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "newstudent",
+    "password": "password123",
+    "email": "newstudent@university.edu",
+    "firstName": "New",
+    "lastName": "Student",
+    "role": "student",
+    "studentId": "STU999",
+    "department": "Computer Science"
+  }'
+```
+
+**Update User Profile:**
+```bash
+curl -X PUT http://localhost:3000/api/users/USER_ID \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "Updated",
+    "lastName": "Name",
+    "email": "updated@university.edu"
+  }'
+```
+
+#### 5. Test Course Management
+
+**Get All Courses:**
+```bash
+curl -X GET http://localhost:3000/api/courses \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Get Courses by Instructor:**
+```bash
+curl -X GET "http://localhost:3000/api/courses?instructorId=instructor-001" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Create a Course (Instructor/Admin):**
+```bash
+curl -X POST http://localhost:3000/api/courses \
+  -H "Authorization: Bearer YOUR_INSTRUCTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "CS501",
+    "name": "Advanced Algorithms",
+    "description": "Deep dive into algorithmic design and analysis",
+    "instructorId": "instructor-001",
+    "semester": "Spring",
+    "year": 2025
+  }'
+```
+
+**Update a Course:**
+```bash
+curl -X PUT http://localhost:3000/api/courses/course-001 \
+  -H "Authorization: Bearer YOUR_INSTRUCTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Introduction to Programming (Updated)",
+    "description": "Updated course description"
+  }'
+```
+
+#### 6. Test Session Management
+
+**Get All Sessions:**
+```bash
+curl -X GET http://localhost:3000/api/sessions \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Get Sessions for a Course:**
+```bash
+curl -X GET http://localhost:3000/api/sessions/course/course-001 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Create a Session (Instructor/Admin):**
+```bash
+curl -X POST http://localhost:3000/api/sessions \
+  -H "Authorization: Bearer YOUR_INSTRUCTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "courseId": "course-001",
+    "date": "2025-01-20",
+    "startTime": "09:00",
+    "endTime": "10:30",
+    "qrCode": "QR-CS101-TEST-001",
+    "isActive": true
+  }'
+```
+
+#### 7. Test Enrollment Management
+
+**Get Enrollments for a Student:**
+```bash
+curl -X GET http://localhost:3000/api/enrollments/student/student-001 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Create Enrollment (Instructor/Admin):**
+```bash
+curl -X POST http://localhost:3000/api/enrollments \
+  -H "Authorization: Bearer YOUR_INSTRUCTOR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "courseId": "course-001",
+    "studentId": "student-012"
+  }'
+```
+
+#### 8. Test Attendance Tracking
+
+**Get Attendance for a Session:**
+```bash
+curl -X GET http://localhost:3000/api/attendance/session/session-001 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Get Attendance for a Student:**
+```bash
+curl -X GET http://localhost:3000/api/attendance/student/student-001 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Mark Attendance:**
+```bash
+curl -X POST http://localhost:3000/api/attendance \
+  -H "Authorization: Bearer YOUR_STUDENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "session-001",
+    "studentId": "student-001",
+    "qrCode": "QR-CS101-001"
+  }'
+```
+
+### Using Postman or Insomnia
+
+1. Import the API endpoints as a collection
+2. Set up an environment variable for `base_url`: `http://localhost:3000/api`
+3. Set up an environment variable for `token` after login
+4. Use `{{token}}` in the Authorization header: `Bearer {{token}}`
+
+### Database Verification with pgAdmin 4
+
+After testing API endpoints, verify the changes in pgAdmin 4:
+
+1. Open pgAdmin 4 and connect to your local database
+2. Navigate to: Servers → Attendify Local → Databases → attendify → Schemas → public → Tables
+3. Right-click on a table (e.g., `users`) and select "View/Edit Data" → "All Rows"
+4. Verify that your test data appears correctly
+
+### Troubleshooting
+
+**Error: Database connection failed**
+- Check if PostgreSQL is running: `sudo systemctl status postgresql` (Arch/Linux) or `brew services list` (macOS)
+- Verify `.env` configuration matches your PostgreSQL setup
+- Test connection: `psql -U postgres -d attendify`
+
+**Error: Authentication failed (401)**
+- Ensure you're using the correct username and password
+- Check if the token has expired (default: 7 days)
+- Try logging in again to get a fresh token
+
+**Error: Forbidden (403)**
+- Verify you have the correct role for the operation
+- Admin operations require an admin token
+- Instructor operations require instructor or admin token
+
+**Error: Course creation returns 503/500**
+- Check server logs for detailed error messages
+- Verify all required fields are provided: code, name, instructorId, semester, year
+- Ensure instructorId is valid and user has instructor role
+- Check database constraints (e.g., duplicate course code)
+
+**Error: User creation crashes the app**
+- Use the admin-protected `/api/users` endpoint, not `/api/auth/register`
+- Ensure you're authenticated as an admin
+- Verify all required fields: username, password, role
+
+## Using curl
+
+### Basic Examples
 
 **1. Register a new user:**
 ```bash

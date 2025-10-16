@@ -29,11 +29,18 @@ class NetworkRepository @Inject constructor(
         try {
             val response = apiCall()
             if (response.isSuccessful) {
-                response.body()?.data?.let {
-                    emit(Resource.Success(transform(it)))
-                } ?: emit(Resource.Error(response.body()?.message ?: "Empty data"))
+                response.body()?.let { body ->
+                    body.data?.let {
+                        emit(Resource.Success(transform(it)))
+                    } ?: emit(Resource.Error(body.message ?: "Empty data"))
+                } ?: emit(Resource.Error("Empty response body"))
             } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
+                val errorMsg = try {
+                    response.errorBody()?.string() ?: "Error ${response.code()}: ${response.message()}"
+                } catch (e: Exception) {
+                    "Error ${response.code()}: ${response.message()}"
+                }
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Network error"))
@@ -51,11 +58,18 @@ class NetworkRepository @Inject constructor(
         try {
             val response = apiCall()
             if (response.isSuccessful) {
-                response.body()?.data?.let {
-                    emit(Resource.Success(it.map(transform)))
-                } ?: emit(Resource.Error(response.body()?.message ?: "Empty data"))
+                response.body()?.let { body ->
+                    body.data?.let {
+                        emit(Resource.Success(it.map(transform)))
+                    } ?: emit(Resource.Error(body.message ?: "Empty data"))
+                } ?: emit(Resource.Error("Empty response body"))
             } else {
-                emit(Resource.Error("Error ${response.code()}: ${response.message()} "))
+                val errorMsg = try {
+                    response.errorBody()?.string() ?: "Error ${response.code()}: ${response.message()}"
+                } catch (e: Exception) {
+                    "Error ${response.code()}: ${response.message()}"
+                }
+                emit(Resource.Error(errorMsg))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Network error"))
@@ -140,6 +154,43 @@ class NetworkRepository @Inject constructor(
 
     fun getUserById(id: String): Flow<Resource<User>> = safeApiCall({ it.toDomainModel() }) {
         api.getUserById(id)
+    }
+
+    fun createUser(
+        username: String,
+        password: String,
+        email: String?,
+        firstName: String?,
+        lastName: String?,
+        role: String,
+        studentId: String?,
+        department: String?
+    ): Flow<Resource<User>> = flow {
+        emit(Resource.Loading())
+        try {
+            val request = RegisterRequest(
+                username, password, email, firstName, lastName, role, studentId, department
+            )
+            val response = api.createUser(request)
+            if (response.isSuccessful) {
+                response.body()?.let { apiResponse ->
+                    if (apiResponse.success && apiResponse.data != null) {
+                        emit(Resource.Success(apiResponse.data.toDomainModel()))
+                    } else {
+                        emit(Resource.Error(apiResponse.message ?: "User creation failed"))
+                    }
+                } ?: emit(Resource.Error("Empty response"))
+            } else {
+                val errorMsg = try {
+                    response.errorBody()?.string() ?: "Error ${response.code()}: ${response.message()}"
+                } catch (e: Exception) {
+                    "Error ${response.code()}: ${response.message()}"
+                }
+                emit(Resource.Error(errorMsg))
+            }
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Network error during user creation"))
+        }
     }
 
     // Courses
