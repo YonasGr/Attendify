@@ -60,7 +60,7 @@ class AdminViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _uiState.value = Resource.Loading()
-            networkRepository.register(
+            networkRepository.createUser(
                 username, password, email, firstName, lastName, role, studentId, department
             ).collectLatest { result ->
                 _uiState.value = result.map { Unit } // Map result to Resource<Unit>
