@@ -3,11 +3,13 @@ package com.attendify.app.data.repository
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.attendify.app.data.api.toDomainModel
 import com.attendify.app.data.local.dao.UserDao
+import com.attendify.app.data.local.entity.UserEntity
 import com.attendify.app.data.model.User
 import com.attendify.app.data.model.toEntity
 import com.attendify.app.data.model.toModel
@@ -15,6 +17,7 @@ import com.attendify.app.utils.Resource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -22,6 +25,7 @@ import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class AuthRepository @Inject constructor(
     @ApplicationContext private val context: Context,
@@ -34,23 +38,25 @@ class AuthRepository @Inject constructor(
     companion object {
         private val CURRENT_USER_ID_KEY = stringPreferencesKey("current_user_id")
         private val AUTH_TOKEN_KEY = stringPreferencesKey("auth_token")
+        private val BIOMETRIC_ENABLED_KEY = booleanPreferencesKey("biometric_enabled")
     }
 
     val authState: StateFlow<Resource<User?>> = dataStore.data
         .map { preferences ->
-            preferences[CURRENT_USER_ID_KEY]
+            Pair(preferences[CURRENT_USER_ID_KEY], preferences[BIOMETRIC_ENABLED_KEY] ?: false)
         }
         .distinctUntilChanged()
-        .flatMapLatest { userId ->
+        .flatMapLatest { (userId, biometricEnabled) ->
             if (userId == null) {
                 flowOf<Resource<User?>>(Resource.Success(null))
             } else {
-                userDao.getUserById(userId).map { entity ->
-                    Resource.Success(entity?.toModel()) as Resource<User?>
+                userDao.getUserById(userId).map { entity: UserEntity? ->
+                    val user = entity?.toModel()?.copy(biometricEnabled = biometricEnabled)
+                    Resource.Success(user) as Resource<User?>
                 }
             }
         }
-        .catch { e ->
+        .catch<Resource<User?>> { e ->
             emit(Resource.Error("Failed to load auth state: ${e.message}"))
         }
         .stateIn(applicationScope, SharingStarted.Eagerly, Resource.Loading())
@@ -104,7 +110,7 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun getCurrentUser(): User? {
-        return (authState.first() as? Resource.Success)?.data
+        return authState.filterIsInstance<Resource.Success<User?>>().first().data
     }
 
     fun getCurrentUserFlow(): Flow<User?> {
@@ -113,8 +119,18 @@ class AuthRepository @Inject constructor(
 
     suspend fun setBiometricEnabled(enabled: Boolean) {
         withContext(Dispatchers.IO) {
-            getCurrentUser()?.let { user ->
-                userDao.updateUser(user.toEntity().copy(biometricEnabled = enabled))
+            dataStore.edit { it[BIOMETRIC_ENABLED_KEY] = enabled }
+        }
+    }
+
+    suspend fun updateUser(user: User, password: String?){
+        withContext(Dispatchers.IO) {
+            val originalEntity = userDao.getUserById(user.id).first()
+            if (originalEntity != null) {
+                val entityToUpdate = user.toEntity().copy(
+                    password = if (password.isNullOrBlank()) originalEntity.password else password
+                )
+                userDao.updateUser(entityToUpdate)
             }
         }
     }

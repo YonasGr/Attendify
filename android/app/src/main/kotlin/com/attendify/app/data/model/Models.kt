@@ -1,8 +1,7 @@
 package com.attendify.app.data.model
 
-/**
- * User model for UI layer
- */
+import com.attendify.app.data.local.entity.UserEntity
+
 data class User(
     val id: String,
     val username: String,
@@ -10,15 +9,12 @@ data class User(
     val firstName: String?,
     val lastName: String?,
     val profileImageUrl: String?,
-    val role: String, // "student", "instructor", "admin"
+    val role: String,
     val studentId: String?,
     val department: String?,
-    val biometricEnabled: Boolean = false
+    var biometricEnabled: Boolean = false
 )
 
-/**
- * Course model for UI layer
- */
 data class Course(
     val id: String,
     val code: String,
@@ -29,9 +25,6 @@ data class Course(
     val year: Int
 )
 
-/**
- * Session model for UI layer
- */
 data class Session(
     val id: String,
     val courseId: String,
@@ -40,23 +33,18 @@ data class Session(
     val startTime: String,
     val endTime: String,
     val qrCode: String,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val attendees: List<String> = emptyList()
 )
 
-/**
- * Attendance record model for UI layer
- */
 data class AttendanceRecord(
     val id: String,
     val sessionId: String,
     val studentId: String,
     val checkedInAt: Long,
-    val status: String // "present", "late", "absent"
+    val status: String
 )
 
-/**
- * Enrollment model for UI layer
- */
 data class Enrollment(
     val id: String,
     val courseId: String,

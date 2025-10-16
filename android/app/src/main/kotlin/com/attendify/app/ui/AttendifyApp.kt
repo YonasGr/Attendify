@@ -1,14 +1,16 @@
 package com.attendify.app.ui
 
-// Force recompile by adding a comment.
-
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Surface
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,9 +25,11 @@ import com.attendify.app.ui.admin.UserManagementScreen
 import com.attendify.app.ui.auth.LoginScreen
 import com.attendify.app.ui.auth.LoginViewModel
 import com.attendify.app.ui.instructor.*
+import com.attendify.app.ui.settings.EditProfileScreen
 import com.attendify.app.ui.settings.SettingsScreen
 import com.attendify.app.ui.student.*
 import com.attendify.app.utils.Resource
+import kotlinx.coroutines.launch
 
 /**
  * Main composable that sets up navigation and authentication flow
@@ -34,6 +38,8 @@ import com.attendify.app.utils.Resource
 fun AttendifyApp() {
     val loginViewModel: LoginViewModel = hiltViewModel()
     val authState by loginViewModel.authState.collectAsState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     Surface(modifier = Modifier.fillMaxSize()) {
         when (val state = authState) {
@@ -44,7 +50,7 @@ fun AttendifyApp() {
             }
             is Resource.Error -> {
                 val navController = rememberNavController()
-                AttendifyNavHost(navController, Screen.Login.route)
+                AttendifyNavHost(navController, Screen.Login.route, onMenuClick = {})
             }
             is Resource.Success -> {
                 val user = state.data
@@ -59,7 +65,30 @@ fun AttendifyApp() {
                     Screen.Login.route
                 }
                 val navController = rememberNavController()
-                AttendifyNavHost(navController, startDestination)
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        AppDrawer(
+                            user = user,
+                            onSettingsClick = {
+                                navController.navigate(Screen.Settings.route)
+                                scope.launch { drawerState.close() }
+                            },
+                            onEditProfileClick = {
+                                navController.navigate(Screen.EditProfile.route)
+                                scope.launch { drawerState.close() }
+                            },
+                            onLogoutClick = {
+                                loginViewModel.logout()
+                                scope.launch { drawerState.close() }
+                            }
+                        )
+                    }
+                ) {
+                    AttendifyNavHost(navController, startDestination, onMenuClick = {
+                        scope.launch { drawerState.open() }
+                    })
+                }
             }
         }
     }
@@ -68,7 +97,8 @@ fun AttendifyApp() {
 @Composable
 private fun AttendifyNavHost(
     navController: NavHostController,
-    startDestination: String
+    startDestination: String,
+    onMenuClick: () -> Unit
 ) {
     val loginViewModel: LoginViewModel = hiltViewModel()
 
@@ -87,7 +117,8 @@ private fun AttendifyNavHost(
                 onNavigateToCourses = { navController.navigate(Screen.StudentCourses.route) },
                 onNavigateToAttendance = { navController.navigate(Screen.AttendanceHistory.route) },
                 onNavigateToUpcomingSessions = { navController.navigate(Screen.UpcomingSessions.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onMenuClick = onMenuClick
             )
         }
 
@@ -115,7 +146,8 @@ private fun AttendifyNavHost(
                 onLogout = { loginViewModel.logout() },
                 onNavigateToCourses = { navController.navigate(Screen.InstructorCourses.route) },
                 onNavigateToSessions = { navController.navigate(Screen.Sessions.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onMenuClick = onMenuClick
             )
         }
 
@@ -154,7 +186,8 @@ private fun AttendifyNavHost(
                 onNavigateToUsers = { navController.navigate(Screen.UserManagement.route) },
                 onNavigateToCourses = { navController.navigate(Screen.InstructorCourses.route) },
                 onNavigateToEnrollments = { navController.navigate(Screen.EnrollmentManagement.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onMenuClick = onMenuClick
             )
         }
 
@@ -175,6 +208,10 @@ private fun AttendifyNavHost(
 
         composable(Screen.Settings.route) {
             SettingsScreen(onNavigateBack = { navController.navigateUp() })
+        }
+
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(onNavigateBack = { navController.navigateUp() })
         }
     }
 }

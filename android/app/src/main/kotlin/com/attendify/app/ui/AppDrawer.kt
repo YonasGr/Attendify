@@ -41,6 +41,7 @@ import com.attendify.app.data.model.User
 fun AppDrawer(
     user: User?,
     onSettingsClick: () -> Unit,
+    onEditProfileClick: () -> Unit,
     onLogoutClick: () -> Unit,
 ) {
     ModalDrawerSheet {
@@ -62,7 +63,7 @@ fun AppDrawer(
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(user?.profilePhotoUrl)
+                            .data(user?.profileImageUrl)
                             .crossfade(true)
                             .build(),
                         contentDescription = "Profile Picture",
@@ -101,19 +102,19 @@ fun AppDrawer(
                 label = { Text("Edit Profile") },
                 icon = { Icon(Icons.Default.Edit, contentDescription = "Edit Profile") },
                 selected = false,
-                onClick = { /*TODO*/ }
+                onClick = onEditProfileClick
             )
             NavigationDrawerItem(
                 label = { Text("Suggest a Feature") },
                 icon = { Icon(Icons.Default.Help, contentDescription = "Suggest a Feature") },
                 selected = false,
-                onClick = { /*TODO*/ }
+                onClick = { /* TODO: Implement feature suggestion flow */ }
             )
             NavigationDrawerItem(
                 label = { Text("Report a Bug") },
                 icon = { Icon(Icons.Default.BugReport, contentDescription = "Report a Bug") },
                 selected = false,
-                onClick = { /*TODO*/ }
+                onClick = { /* TODO: Implement bug reporting flow */ }
             )
         }
 

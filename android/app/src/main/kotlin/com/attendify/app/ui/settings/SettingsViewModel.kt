@@ -68,6 +68,24 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun updateProfile(firstName: String, lastName: String, email: String, password: String) {
+        viewModelScope.launch {
+            _settingsState.value = SettingsState.Loading
+            try {
+                val currentUser = _user.value!!
+                val updatedUser = currentUser.copy(
+                    firstName = firstName,
+                    lastName = lastName,
+                    email = email
+                )
+                authRepository.updateUser(updatedUser, password)
+                _settingsState.value = SettingsState.Success("Profile updated successfully.")
+            } catch (e: Exception) {
+                _settingsState.value = SettingsState.Error(e.message ?: "Failed to update profile.")
+            }
+        }
+    }
+
     fun setError(message: String) {
         _settingsState.value = SettingsState.Error(message)
     }

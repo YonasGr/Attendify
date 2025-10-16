@@ -1,5 +1,6 @@
 package com.attendify.app.ui.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,11 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.attendify.app.R
 
 /**
  * Login screen for all user roles
@@ -20,8 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
     val loginState by viewModel.loginState.collectAsState()
-    var username by remember { mutableStateOf("student1") }
-    var password by remember { mutableStateOf("password") }
+    var username by remember { mutableStateOf("student") }
+    var password by remember { mutableStateOf("student123") }
 
     Surface {
         Column(
@@ -32,6 +36,11 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_profile_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier.size(120.dp)
+            )
             Text(
                 text = "Attendify",
                 style = MaterialTheme.typography.displayMedium,
@@ -68,7 +77,8 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
                 Text(
                     text = (loginState as LoginState.Error).message,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp),
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -89,6 +99,9 @@ fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
                 } else {
                     Text("Login")
                 }
+            }
+            TextButton(onClick = { /* TODO: Implement forgot password */ }) {
+                Text("Forgot Password?")
             }
         }
     }

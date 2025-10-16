@@ -5,21 +5,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.attendify.app.R
 import com.attendify.app.ui.auth.LoginViewModel
 import com.attendify.app.utils.Resource
 
@@ -32,7 +27,8 @@ fun AdminDashboardScreen(
     onNavigateToUsers: () -> Unit,
     onNavigateToCourses: () -> Unit,
     onNavigateToEnrollments: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onMenuClick: () -> Unit
 ) {
     val authState by loginViewModel.authState.collectAsState()
     val user = (authState as? Resource.Success)?.data
@@ -46,18 +42,8 @@ fun AdminDashboardScreen(
             TopAppBar(
                 title = { Text("Admin Dashboard") },
                 navigationIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_profile_logo),
-                        contentDescription = "App Logo",
-                        modifier = Modifier.padding(start = 12.dp)
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, "Settings")
-                    }
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, "Logout")
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Default.Menu, "Menu")
                     }
                 }
             )
@@ -71,17 +57,26 @@ fun AdminDashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                user?.let {
-                    Text(
-                        text = "Welcome, ${it.firstName ?: "Admin"}!",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
-                    Text(
-                        text = "Here is your system overview.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        user?.let {
+                            Text(
+                                text = "Welcome, ${it.firstName ?: "Admin"}!",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Here is your system overview.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 
@@ -90,13 +85,13 @@ fun AdminDashboardScreen(
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.People,
-                        title = "Users",
+                        title = "Total Users",
                         value = if (uiState is Resource.Loading) "-" else users.size.toString(),
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.School,
-                        title = "Courses",
+                        title = "Total Courses",
                         value = if (uiState is Resource.Loading) "-" else courses.size.toString(),
                     )
                 }
@@ -107,13 +102,13 @@ fun AdminDashboardScreen(
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Event,
-                        title = "Sessions",
+                        title = "Total Sessions",
                         value = if (uiState is Resource.Loading) "-" else sessions.size.toString(),
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.CheckCircle,
-                        title = "Attendance",
+                        title = "Attendance Records",
                         value = "N/A",
                     )
                 }
