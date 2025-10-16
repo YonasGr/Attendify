@@ -323,17 +323,30 @@ fun SettingsScreen(
     // Biometric authentication dialog
     if (showBiometricDialog) {
         LaunchedEffect(Unit) {
-            biometricAuthManager.showBiometricPrompt(
-                activity = context.findActivity(),
-                onSuccess = {
-                    viewModel.onBiometricAuthToggled(true)
-                    showBiometricDialog = false
-                },
-                onError = { _, errorString ->
-                    showBiometricDialog = false
-                    viewModel.setError("Failed to enable biometric authentication: $errorString")
-                }
-            )
+            try {
+                val activity = context.findActivity()
+                biometricAuthManager.showBiometricPrompt(
+                    activity = activity,
+                    onSuccess = {
+                        viewModel.onBiometricAuthToggled(true)
+                        showBiometricDialog = false
+                    },
+                    onError = { errorCode, errorString ->
+                        showBiometricDialog = false
+                        // Don't show error for user cancellation
+                        if (errorCode != androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
+                            errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED) {
+                            viewModel.setError("Biometric authentication failed: $errorString")
+                        }
+                    },
+                    onFailed = {
+                        // Biometric not recognized, prompt remains open for retry
+                    }
+                )
+            } catch (e: Exception) {
+                showBiometricDialog = false
+                viewModel.setError("Failed to enable biometric authentication: ${e.message}")
+            }
         }
     }
 }
