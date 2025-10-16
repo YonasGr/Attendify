@@ -19,3 +19,12 @@ android/.cxx/
 .navigation/
 *.iml
 *.hprof
+
+# Server / Node.js
+server/node_modules/
+server/.env
+server/npm-debug.log*
+server/yarn-debug.log*
+server/yarn-error.log*
+server/package-lock.json
+server/.npm
