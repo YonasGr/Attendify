@@ -1,5 +1,8 @@
 package com.attendify.app.ui
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,6 +47,27 @@ fun AppDrawer(
     onEditProfileClick: () -> Unit,
     onLogoutClick: () -> Unit,
 ) {
+    val context = LocalContext.current
+    
+    fun sendFeedbackEmail(subject: String, bodyTemplate: String) {
+        try {
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = Uri.parse("mailto:")
+                putExtra(Intent.EXTRA_EMAIL, arrayOf("yonasgirma222@gmail.com"))
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, bodyTemplate)
+            }
+            
+            if (intent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(intent)
+            } else {
+                Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Failed to open email app", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
     ModalDrawerSheet {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -108,13 +132,54 @@ fun AppDrawer(
                 label = { Text("Suggest a Feature") },
                 icon = { Icon(Icons.Default.Help, contentDescription = "Suggest a Feature") },
                 selected = false,
-                onClick = { /* TODO: Implement feature suggestion flow */ }
+                onClick = {
+                    val userName = user?.let { "${it.firstName} ${it.lastName}" } ?: "User"
+                    val userEmail = user?.email ?: "No email"
+                    sendFeedbackEmail(
+                        subject = "Attendify - Feature Suggestion",
+                        bodyTemplate = """
+                            |Feature Suggestion:
+                            |
+                            |[Please describe your feature suggestion here]
+                            |
+                            |---
+                            |User: $userName
+                            |Email: $userEmail
+                            |Role: ${user?.role ?: "Unknown"}
+                        """.trimMargin()
+                    )
+                }
             )
             NavigationDrawerItem(
                 label = { Text("Report a Bug") },
                 icon = { Icon(Icons.Default.BugReport, contentDescription = "Report a Bug") },
                 selected = false,
-                onClick = { /* TODO: Implement bug reporting flow */ }
+                onClick = {
+                    val userName = user?.let { "${it.firstName} ${it.lastName}" } ?: "User"
+                    val userEmail = user?.email ?: "No email"
+                    sendFeedbackEmail(
+                        subject = "Attendify - Bug Report",
+                        bodyTemplate = """
+                            |Bug Report:
+                            |
+                            |What happened?
+                            |[Please describe the bug here]
+                            |
+                            |Steps to reproduce:
+                            |1. 
+                            |2. 
+                            |3. 
+                            |
+                            |Expected behavior:
+                            |[What did you expect to happen?]
+                            |
+                            |---
+                            |User: $userName
+                            |Email: $userEmail
+                            |Role: ${user?.role ?: "Unknown"}
+                        """.trimMargin()
+                    )
+                }
             )
         }
 
