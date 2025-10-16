@@ -164,7 +164,37 @@ See [android/README.md](android/README.md) for complete setup instructions and d
 
 ## Backend Integration
 
-The Attendify Android app now integrates with the production backend at **https://attendify-mpsw.onrender.com**.
+The Attendify Android app integrates with the production backend at **https://attendify-mpsw.onrender.com**.
+
+### Recent Backend Improvements (October 2025)
+
+The backend API has been **completely implemented** with full database operations:
+
+- ✅ **Complete Database Schema**: All tables (users, courses, sessions, enrollments, attendance_records) with proper constraints and relationships
+- ✅ **Authentication System**: Full JWT-based authentication with bcrypt password hashing
+  - Login with username/password validation
+  - User registration with duplicate username checking
+  - Token refresh mechanism
+  - Secure password storage with bcrypt (10 salt rounds)
+- ✅ **Role-Based Access Control**: Middleware for authentication and authorization
+  - JWT token verification on protected routes
+  - Role-based permissions (student, instructor, admin)
+  - Granular access control per endpoint
+- ✅ **Complete CRUD Operations**: All endpoints fully implemented with database operations
+  - Users: Create, read, update, delete with validation
+  - Courses: Full CRUD with instructor assignment and validation
+  - Sessions: Complete session management with QR code support
+  - Enrollments: Student enrollment with duplicate checking
+  - Attendance: Recording and retrieval with multiple filters
+- ✅ **Comprehensive Error Handling**: Proper HTTP status codes and error messages
+  - 400 Bad Request for invalid input
+  - 401 Unauthorized for missing authentication
+  - 403 Forbidden for insufficient permissions
+  - 404 Not Found for missing resources
+  - 409 Conflict for duplicate entries
+  - 500 Internal Server Error with error logging
+- ✅ **Input Validation**: Request validation at every endpoint
+- ✅ **Database Constraints**: Foreign keys, unique constraints, and cascading deletes
 
 ### Architecture
 
@@ -177,14 +207,44 @@ The app follows an **offline-first architecture**:
 
 ### Network Features
 
-- ✅ **Authentication**: Login and registration with JWT tokens
-- ✅ **User Management**: Sync user profiles and roles
-- ✅ **Course Operations**: Create, read, update courses with backend
-- ✅ **Session Management**: Sync attendance sessions and QR codes
-- ✅ **Attendance Tracking**: Real-time attendance submission to server
-- ✅ **Enrollment Sync**: Student course enrollments synchronized
-- ✅ **Error Handling**: Robust retry logic and offline fallback
-- ✅ **Token Management**: Automatic token refresh and storage
+- ✅ **Authentication**: 
+  - Login and registration with JWT tokens
+  - Password hashing with bcrypt for security
+  - Token refresh for extended sessions
+  - Secure token storage in Android DataStore
+- ✅ **User Management**: 
+  - Sync user profiles and roles
+  - Role-based access control (student, instructor, admin)
+  - Admin-only user creation and management
+  - Profile updates with password change support
+- ✅ **Course Operations**: 
+  - Create, read, update, delete courses with backend
+  - Instructor assignment and validation
+  - Duplicate course code prevention
+  - Course filtering by instructor or enrollment
+- ✅ **Session Management**: 
+  - Sync attendance sessions and QR codes
+  - Session creation with date/time validation
+  - Active/inactive session status
+  - Instructor-only session management
+- ✅ **Attendance Tracking**: 
+  - Real-time attendance submission to server
+  - Multiple retrieval options (by session, by student, all)
+  - Attendance status tracking (present, late, absent)
+  - Duplicate attendance prevention
+- ✅ **Enrollment Sync**: 
+  - Student course enrollments synchronized
+  - Enrollment validation (student exists, course exists, not already enrolled)
+  - Instructor-controlled enrollment management
+- ✅ **Error Handling**: 
+  - Robust retry logic and offline fallback
+  - Comprehensive error messages
+  - Proper HTTP status codes
+  - Detailed error logging
+- ✅ **Token Management**: 
+  - Automatic token refresh and storage
+  - Secure authentication headers
+  - Token expiration handling (7-day default)
 
 ### API Configuration
 
@@ -367,6 +427,73 @@ For issues and questions:
 - Open an issue on GitHub
 - Check documentation in respective directories
 - Contact the development team
+
+## Troubleshooting
+
+### Backend API Issues
+
+**Course Creation Returns 400/500 Error:**
+- ✅ **Fixed**: Backend now validates all required fields (code, name, instructorId, semester, year)
+- ✅ **Fixed**: Proper error messages for missing or invalid fields
+- ✅ **Fixed**: Duplicate course code detection returns 409 Conflict
+- ✅ **Fixed**: Instructor validation ensures user exists and has instructor role
+
+**Missing Course Lists for Instructors:**
+- ✅ **Fixed**: Instructors now see only their assigned courses
+- ✅ **Fixed**: Course filtering by instructorId implemented
+- ✅ **Fixed**: Proper JOIN queries return instructor details with courses
+
+**Admin/Instructor Panels Not Functional:**
+- ✅ **Fixed**: Role-based access control properly enforced
+- ✅ **Fixed**: Authentication middleware validates JWT tokens
+- ✅ **Fixed**: All CRUD operations fully implemented with database queries
+- ✅ **Fixed**: Proper permissions for create/update/delete operations
+
+**Authentication Failures:**
+- ✅ **Fixed**: Login properly validates username and password with bcrypt
+- ✅ **Fixed**: JWT tokens generated with configurable expiration (7 days default)
+- ✅ **Fixed**: Token refresh endpoint for extending sessions
+- ✅ **Fixed**: Secure password hashing with 10 salt rounds
+
+**Database Connection Errors:**
+- Ensure `DATABASE_URL` environment variable is set correctly
+- For local development, PostgreSQL must be running
+- For production (Render), database URL is automatically provided
+- Check server logs for specific connection errors
+
+**Authorization Issues:**
+- Ensure JWT token is included in `Authorization: Bearer <token>` header
+- Token must be valid and not expired
+- User role must match required permissions for endpoint
+- Students can only access their own data unless admin/instructor
+
+### Android App Issues
+
+**App Won't Build:**
+- Ensure JDK 17+ is installed
+- Check Android SDK is updated
+- Network access to Google Maven may be restricted
+- Run `./gradlew clean` then rebuild
+
+**Network Connectivity:**
+- For emulator, use `http://10.0.2.2:3000/api/` for local backend
+- For physical device, use `http://192.168.x.x:3000/api/` with your computer's IP
+- Production backend is at `https://attendify-mpsw.onrender.com/api/`
+- Check API_BASE_URL in `android/app/build.gradle.kts`
+
+**Camera Not Working:**
+- Grant camera permissions in Settings
+- Restart the app after granting permission
+
+**Biometric Not Available:**
+- Check device has fingerprint/face sensor
+- Enable biometric auth in device settings
+- May not work on emulators
+
+**QR Code Won't Scan:**
+- Ensure good lighting
+- Hold camera steady
+- QR code should be clear and focused
 
 ## Roadmap
 
