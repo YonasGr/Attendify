@@ -55,34 +55,92 @@ app.use((err, req, res, next) => {
 
 // Create tables
 async function createTables() {
-    const createTablesQuery = `
-    CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        email TEXT,
-        firstName TEXT,
-        lastName TEXT,
-        role TEXT NOT NULL,
-        studentId TEXT,
-        department TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS courses (
-        id TEXT PRIMARY KEY,
-        code TEXT NOT NULL,
-        name TEXT NOT NULL,
-        description TEXT,
-        instructorId TEXT NOT NULL REFERENCES users(id),
-        semester TEXT NOT NULL,
-        year INTEGER NOT NULL
-    );
-    `;
     try {
-        await db.query(createTablesQuery);
-        console.log('Tables created successfully');
+        // Users table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                password TEXT NOT NULL,
+                email TEXT,
+                firstName TEXT,
+                lastName TEXT,
+                role TEXT NOT NULL CHECK (role IN ('student', 'instructor', 'admin')),
+                studentId TEXT,
+                department TEXT,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✓ Users table created');
+
+        // Courses table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS courses (
+                id TEXT PRIMARY KEY,
+                code TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                instructorId TEXT NOT NULL,
+                semester TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (instructorId) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('✓ Courses table created');
+
+        // Sessions table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS sessions (
+                id TEXT PRIMARY KEY,
+                courseId TEXT NOT NULL,
+                date TEXT NOT NULL,
+                startTime TEXT NOT NULL,
+                endTime TEXT NOT NULL,
+                qrCode TEXT,
+                isActive BOOLEAN DEFAULT true,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('✓ Sessions table created');
+
+        // Enrollments table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS enrollments (
+                id TEXT PRIMARY KEY,
+                studentId TEXT NOT NULL,
+                courseId TEXT NOT NULL,
+                enrolledAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE,
+                UNIQUE(studentId, courseId)
+            )
+        `);
+        console.log('✓ Enrollments table created');
+
+        // Attendance records table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS attendance_records (
+                id TEXT PRIMARY KEY,
+                sessionId TEXT NOT NULL,
+                studentId TEXT NOT NULL,
+                status TEXT NOT NULL CHECK (status IN ('present', 'late', 'absent')),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sessionId) REFERENCES sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE,
+                UNIQUE(sessionId, studentId)
+            )
+        `);
+        console.log('✓ Attendance records table created');
+
+        console.log('✅ All tables created successfully');
     } catch (err) {
-        console.error('Error creating tables', err.stack);
+        console.error('❌ Error creating tables:', err.stack);
+        throw err;
     }
 }
 
